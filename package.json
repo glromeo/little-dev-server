@@ -9,6 +9,7 @@
     "/cert/server.key",
     "/cert/server.crt",
     "/lib",
+    "/resources",
     "/server.config.js"
   ],
   "keywords": [
@@ -64,6 +65,7 @@
   },
   "scripts": {
     "demo": "node lib/cli.js --root ./demo",
-    "test": "jest --coverage && coveralls < coverage/lcov.info"
+    "test": "jest --coverage",
+    "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls"
   }
 }
