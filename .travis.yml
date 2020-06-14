@@ -3,6 +3,9 @@ node_js:
   - "node"
   - "14"
 before_script:
+  - cd demo
+  - yarn install
+  - cd ..
   - cd test/fixture
   - yarn install
-  - cd ../../
+  - cd ../..
