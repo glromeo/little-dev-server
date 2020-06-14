@@ -58,11 +58,12 @@
     "@types/node": "^14.0.13",
     "@types/node-fetch": "^2.3.7",
     "@types/node-sass": "^4.11.1",
+    "coveralls": "^3.1.0",
     "jest": "^26.0.1",
     "node-fetch": "^2.6.0"
   },
   "scripts": {
     "demo": "node lib/cli.js --root ./demo",
-    "test": "jest --coverage"
+    "test": "jest --coverage && coveralls < coverage/lcov.info"
   }
 }
