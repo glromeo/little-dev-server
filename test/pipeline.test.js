@@ -1,11 +1,11 @@
 const {testServer} = require("./test.config.js");
 const path = require("path");
 
-const {writeFileSync} = require("fs");
+const {writeFileSync, statSync} = require("fs");
 
 describe("pipeline test", function () {
 
-    jest.setTimeout(30*1000);
+    jest.setTimeout(30 * 1000);
 
     let config, server, watcher, fetch;
 
@@ -25,17 +25,25 @@ describe("pipeline test", function () {
 
         config.etag = undefined;
 
+        const {mtime} = statSync(path.resolve(__dirname, "fixture/public/hello-world.txt"));
+
         return fetch(`/public/hello-world.txt?ignored`).then(response => {
             expect(response.ok).toBe(true);
             expect(response.status).toBe(200);
             expect(response.statusText).toBe("OK");
             expect(response.headers.raw()).toMatchObject({
-                "etag": ["\"80-/JdUAISwNpmsH7g1l+aj8Un5rPE\""],
+                "etag": ["test-etag"],
                 "content-length": ["12"],
                 "content-type": ["text/plain; charset=utf-8"],
-                "last-modified": ["Mon, 01 Jun 2020 01:12:35 GMT"]
+                "last-modified": [mtime.toUTCString()]
             });
             expect(response.headers.get('connection')).toMatch("close");
+            expect(require("etag")).toHaveBeenCalledWith(
+                expect.stringMatching(
+                    "little-dev-server/test/fixture/public/hello-world.txt"
+                ),
+                undefined
+            );
             return response.text();
         }).then(text => {
             expect(text).toEqual("Hello World!");
@@ -72,7 +80,9 @@ describe("pipeline test", function () {
         };
 
         return fetch(`/public/hello-world.txt`).then(response => {
-            expect(response.headers.get('etag')).toMatch("W/\"80-/JdUAISwNpmsH7g1l+aj8Un5rPE\"");
+            expect(require("etag")).toHaveBeenCalledWith(expect.anything(),expect.objectContaining({
+                weak: true
+            }));
         });
     });
 

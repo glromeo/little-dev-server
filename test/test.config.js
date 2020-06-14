@@ -4,6 +4,11 @@ const fetch = require("node-fetch");
 const https = require("https");
 const fs = require("fs");
 
+jest.mock("etag");
+
+const etag = require("etag");
+etag.mockReturnValue("test-etag");
+
 const testConfig = configure(resolve(__dirname, 'fixture/server.config.js'));
 
 const httpsAgentOptions = {
