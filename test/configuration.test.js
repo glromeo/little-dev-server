@@ -4,7 +4,7 @@ const path = require("path");
 const basedir = path.resolve(__dirname, "..");
 const fixturedir = path.resolve(__dirname, "fixture");
 
-describe("configuration (bare)", function () {
+describe("configuration", function () {
 
     it("config is empty until configure has been invoked", function () {
         expect(Object.keys(config).length).toBe(0);
@@ -17,21 +17,14 @@ describe("configuration (bare)", function () {
         parseCLI(`--config="${fixturedir}/server.config.js"`);
         configure();
         expect(config.webModules).toMatch(path.resolve(fixturedir, "web_modules"));
-
         parseCLI();
+
         configure();
         expect(config.webModules).toMatch(path.resolve(basedir, "web_modules"));
     });
-});
-
-describe("configuration (configured)", function () {
-
-    beforeEach(function () {
-        parseCLI();
-        configure();
-    })
 
     it("check default base & root dir", function () {
+        configure();
         expect(config.baseDir).toStrictEqual(basedir);
         expect(config.rootDir).toStrictEqual(process.cwd());
         expect(config.nodeModules).toStrictEqual(path.resolve(config.rootDir, "node_modules"));
@@ -39,13 +32,16 @@ describe("configuration (configured)", function () {
     });
 
     it("can specify root dir from cli", function () {
+        configure();
         expect(config.rootDir).toStrictEqual(process.cwd());
         parseCLI("--root=./test/fixture");
         configure();
         expect(config.rootDir).toStrictEqual(fixturedir);
+        parseCLI();
     });
 
     it("accepts configuration from package.json under devServer", function () {
+        configure();
         expect(config.testOption).toBeUndefined();
         configure({rootDir: fixturedir});
         expect(config.version).toBeUndefined();
