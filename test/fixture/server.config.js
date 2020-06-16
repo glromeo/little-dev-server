@@ -27,6 +27,5 @@ module.exports = {
 
     customResolveOptions: {
         basedir: __dirname,
-
     }
 }

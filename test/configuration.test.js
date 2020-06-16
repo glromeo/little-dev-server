@@ -12,12 +12,26 @@ describe("configuration", function () {
         expect(Object.keys(config).length).toBeGreaterThan(2);
     });
 
+    it("can load config from a file", function () {
+
+        parseCLI(`--config="${fixturedir}/server.config.js"`);
+        configure();
+        expect(config.webModules).toMatch(path.resolve(fixturedir, "web_modules"));
+
+        parseCLI();
+        configure();
+        expect(config.webModules).toMatch(path.resolve(basedir, "web_modules"));
+    });
+
     it("default base & root dir", function () {
         configure();
         expect(config.baseDir).toStrictEqual(basedir);
         expect(config.rootDir).toStrictEqual(process.cwd());
         expect(config.nodeModules).toStrictEqual(path.resolve(basedir, "node_modules"));
         expect(config.webModules).toStrictEqual(path.resolve(basedir, "web_modules"));
+    });
+
+    it("default base & root dir", function () {
 
         expect(config.http2).toBeTruthy();
         config.http2 = false;
@@ -33,7 +47,7 @@ describe("configuration", function () {
     it("accepts configuration from package.json under devServer", function () {
         configure();
         expect(config.testOption).toBeUndefined();
-        configure({rootDir:fixturedir});
+        configure({rootDir: fixturedir});
         expect(config.version).toBeUndefined();
         expect(config.testOption).toStrictEqual("testValue");
     });
