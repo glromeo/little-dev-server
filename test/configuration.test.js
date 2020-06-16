@@ -1,10 +1,10 @@
 const {parseCLI, config, configure} = require("../lib/configuration.js");
 const path = require("path");
 
-describe("configuration", function () {
+const basedir = path.resolve(__dirname, "..");
+const fixturedir = path.resolve(__dirname, "fixture");
 
-    const basedir = path.resolve(__dirname, "..");
-    const fixturedir = path.resolve(__dirname, "fixture");
+describe("configuration (bare)", function () {
 
     it("config is empty until configure has been invoked", function () {
         expect(Object.keys(config).length).toBe(0);
@@ -22,30 +22,30 @@ describe("configuration", function () {
         configure();
         expect(config.webModules).toMatch(path.resolve(basedir, "web_modules"));
     });
+});
 
-    it("default base & root dir", function () {
+describe("configuration (configured)", function () {
+
+    beforeEach(function () {
+        parseCLI();
         configure();
+    })
+
+    it("check default base & root dir", function () {
         expect(config.baseDir).toStrictEqual(basedir);
         expect(config.rootDir).toStrictEqual(process.cwd());
-        expect(config.nodeModules).toStrictEqual(path.resolve(basedir, "node_modules"));
-        expect(config.webModules).toStrictEqual(path.resolve(basedir, "web_modules"));
+        expect(config.nodeModules).toStrictEqual(path.resolve(config.rootDir, "node_modules"));
+        expect(config.webModules).toStrictEqual(path.resolve(config.rootDir, "web_modules"));
     });
 
-    it("default base & root dir", function () {
-
-        expect(config.http2).toBeTruthy();
-        config.http2 = false;
-
-        parseCLI("--root=./fixture -p");
+    it("can specify root dir from cli", function () {
+        expect(config.rootDir).toStrictEqual(process.cwd());
+        parseCLI("--root=./test/fixture");
         configure();
-
         expect(config.rootDir).toStrictEqual(fixturedir);
-        expect(config.http2).not.toBeTruthy();
-        expect(config.push).toBeTruthy();
     });
 
     it("accepts configuration from package.json under devServer", function () {
-        configure();
         expect(config.testOption).toBeUndefined();
         configure({rootDir: fixturedir});
         expect(config.version).toBeUndefined();
