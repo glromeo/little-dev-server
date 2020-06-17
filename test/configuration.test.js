@@ -1,5 +1,6 @@
 const {parseCLI, config, configure} = require("../lib/configuration.js");
 const path = require("path");
+const fs = require("fs");
 
 const basedir = path.resolve(__dirname, "..");
 const fixturedir = path.resolve(__dirname, "fixture");
@@ -21,6 +22,13 @@ describe("configuration", function () {
 
         configure();
         expect(config.webModules).toMatch(path.resolve(basedir, "web_modules"));
+
+        const filename = path.resolve(fixturedir, "config-" + Date.now() + ".js");
+        fs.writeFileSync(filename, `module.exports = ${JSON.stringify({
+            logLevel: "debug"
+        }, undefined, " ")}`)
+        expect(configure({config: filename})).toMatchObject({logLevel: "debug"});
+        fs.unlinkSync(filename);
     });
 
     it("check default base & root dir", function () {
@@ -79,4 +87,18 @@ describe("configuration", function () {
         expect(config.nodeModules).toStrictEqual(path.resolve(fixturedir, "node_modules"));
         expect(config.webModules).toStrictEqual(path.resolve(fixturedir, "web_modules"));
     });
+
+    it("config.rootDir must be a directory", async function () {
+        expect(() => configure({rootDir: __filename})).toThrowError("ENODIR: not a valid root directory");
+        expect(() => configure({rootDir: `${__dirname}/non_dir/`})).toThrowError("ENOENT: no such file or directory");
+    });
+
+    it("can load key & cert from local or root, as well specifying them inline", async function () {
+        configure({http2:false})
+        expect(config.secureServerOptions).toBeUndefined();
+        configure({rootDir: "./test", http2: true, server:{allowHTTP1:true, cert: "no cert"}});
+        expect(config.secureServerOptions.key).not.toBeUndefined();
+        expect(config.secureServerOptions.cert).toStrictEqual("no cert");
+    });
+
 });
