@@ -1,14 +1,60 @@
-const {testConfig} = require("./test.config.js");
-const {useWebModuleLoader} = require("../lib/utility/web-module-loader.js");
-const {useWebModuleBundler} = require("../lib/utility/web-module-bundler.js");
+const {
+    baseDir,
+    fixtureDir,
+    webModulesDir,
+    testConfig
+} = require("./test-configuration.js");
+
+const {
+    parseCLI,
+    config,
+    configure
+} = require("../lib/configuration.js");
 
 const fs = require("fs");
 const path = require("path");
 
 describe("web-module loader/bundler (powered by rollup)", function () {
 
-    const {resolveWebModule} = useWebModuleLoader(testConfig);
-    const {modules, bundleWebModule} = useWebModuleBundler(testConfig);
+    configure(testConfig);
+
+    const {
+        nodeModuleBareUrl,
+        isRewriteRequired,
+        modules,
+        resolveWebModule,
+        bundleWebModule
+    } = require("../lib/utility/web-modules.js");
+
+    it("config.clean cleans the web_modules directory", function () {
+
+        const testFile = webModulesDir.join("test-clean");
+        fs.mkdirSync(webModulesDir.path, {recursive: true});
+        fs.writeFileSync(testFile, "test");
+
+        configure({rootDir: fixtureDir.path, clean:false});
+        expect(fs.existsSync(testFile)).toBeTruthy();
+
+        configure({rootDir: fixtureDir.path, clean:true});
+        expect(fs.existsSync(testFile)).toBeFalsy();
+        expect(fs.existsSync(webModulesDir.path)).toBeTruthy();
+    });
+
+    it("nodeBasename", async function () {
+        expect(nodeModuleBareUrl("C:\\little-dev-server\\node_modules\\@babel\\core\\lib\\parse.js")).toStrictEqual("@babel/core/lib/parse.js");
+        expect(nodeModuleBareUrl("/little-dev-server/node_modules/@babel/core/lib/parse.js")).toStrictEqual("@babel/core/lib/parse.js");
+    });
+
+    it("isRewriteRequired", async function () {
+        expect(isRewriteRequired(".")).toBe(true);
+        expect(isRewriteRequired(".name")).toBe(true);
+        expect(isRewriteRequired(".name.ts")).toBe(true);
+        expect(isRewriteRequired("./name")).toBe(true);
+        expect(isRewriteRequired("./name.ext")).toBe(false);
+        expect(isRewriteRequired("/name")).toBe(true);
+        expect(isRewriteRequired("/name.ext")).toBe(false);
+        expect(isRewriteRequired("c://name.ext")).toBe(false);
+    });
 
     it("graphql-tag", async function () {
         const graphqlTagModule = await resolveWebModule("graphql-tag");

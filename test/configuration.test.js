@@ -1,9 +1,18 @@
-const {parseCLI, config, configure} = require("../lib/configuration.js");
+const {
+    baseDir,
+    fixtureDir,
+    webModulesDir,
+    testConfig
+} = require("./test-configuration.js");
+
+const {
+    parseCLI,
+    config,
+    configure
+} = require("../lib/configuration.js");
+
 const path = require("path");
 const fs = require("fs");
-
-const basedir = path.resolve(__dirname, "..");
-const fixturedir = path.resolve(__dirname, "fixture");
 
 describe("configuration", function () {
 
@@ -15,15 +24,15 @@ describe("configuration", function () {
 
     it("can load config from a file", function () {
 
-        parseCLI(`--config="${fixturedir}/server.config.js"`);
+        parseCLI(`--config="${fixtureDir.path}/server.config.js"`);
         configure();
-        expect(config.webModules).toMatch(path.resolve(fixturedir, "web_modules"));
+        expect(config.webModules).toMatch(webModulesDir.path);
         parseCLI();
 
         configure();
-        expect(config.webModules).toMatch(path.resolve(basedir, "web_modules"));
+        expect(config.webModules).toMatch(baseDir.join("web_modules"));
 
-        const filename = path.resolve(fixturedir, "config-" + Date.now() + ".js");
+        const filename = fixtureDir.join("config-" + Date.now() + ".js");
         fs.writeFileSync(filename, `module.exports = ${JSON.stringify({
             logLevel: "debug"
         }, undefined, " ")}`)
@@ -33,7 +42,7 @@ describe("configuration", function () {
 
     it("check default base & root dir", function () {
         configure();
-        expect(config.baseDir).toStrictEqual(basedir);
+        expect(config.baseDir).toStrictEqual(baseDir.path);
         expect(config.rootDir).toStrictEqual(process.cwd());
         expect(config.nodeModules).toStrictEqual(path.resolve(config.rootDir, "node_modules"));
         expect(config.webModules).toStrictEqual(path.resolve(config.rootDir, "web_modules"));
@@ -44,14 +53,14 @@ describe("configuration", function () {
         expect(config.rootDir).toStrictEqual(process.cwd());
         parseCLI("--root=./test/fixture");
         configure();
-        expect(config.rootDir).toStrictEqual(fixturedir);
+        expect(config.rootDir).toStrictEqual(fixtureDir.path);
         parseCLI();
     });
 
     it("accepts configuration from package.json under devServer", function () {
         configure();
         expect(config.testOption).toBeUndefined();
-        configure({rootDir: fixturedir});
+        configure({rootDir: fixtureDir.path});
         expect(config.version).toBeUndefined();
         expect(config.testOption).toStrictEqual("testValue");
     });
@@ -59,9 +68,9 @@ describe("configuration", function () {
     it("configure to use fixture as root dir", function () {
 
         configure({
-            rootDir: fixturedir,
+            rootDir: fixtureDir.path,
             mount: {
-                "/public": [path.resolve(fixturedir, "public")]
+                "/public": [fixtureDir.join("public")]
             },
             babel: {
                 plugins: expect.arrayContaining([
@@ -82,10 +91,10 @@ describe("configuration", function () {
             clean: true
         });
 
-        expect(config.baseDir).toStrictEqual(basedir);
-        expect(config.rootDir).toStrictEqual(fixturedir);
-        expect(config.nodeModules).toStrictEqual(path.resolve(fixturedir, "node_modules"));
-        expect(config.webModules).toStrictEqual(path.resolve(fixturedir, "web_modules"));
+        expect(config.baseDir).toStrictEqual(baseDir.path);
+        expect(config.rootDir).toStrictEqual(fixtureDir.path);
+        expect(config.nodeModules).toStrictEqual(fixtureDir.join("node_modules"));
+        expect(config.webModules).toStrictEqual(webModulesDir.path);
     });
 
     it("config.rootDir must be a directory", async function () {
@@ -99,6 +108,23 @@ describe("configuration", function () {
         configure({rootDir: "./test", http2: true, server:{allowHTTP1:true, cert: "no cert"}});
         expect(config.secureServerOptions.key).not.toBeUndefined();
         expect(config.secureServerOptions.cert).toStrictEqual("no cert");
+    });
+
+    it("config.ready is called only once", function () {
+        const ready = config.ready = jest.fn();
+        configure();
+        expect(ready).toHaveBeenCalledWith(config);
+        configure();
+        expect(ready).toHaveBeenCalledTimes(1);
+    });
+
+    it("config.update is called at every configure()", function () {
+        const updated = config.updated = jest.fn();
+        configure({alpha: 1});
+        expect(updated).toHaveBeenCalledWith(expect.objectContaining({alpha: 1}));
+        configure({beta: 2});
+        expect(updated).toHaveBeenCalledWith(expect.objectContaining({beta: 2}));
+        expect(updated).toHaveBeenCalledTimes(2);
     });
 
 });
