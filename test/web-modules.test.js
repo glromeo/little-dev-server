@@ -21,7 +21,7 @@ describe("web-module loader/bundler (powered by rollup)", function () {
     const {
         nodeModuleBareUrl,
         isRewriteRequired,
-        parseWebModuleURL,
+        parseURL,
         modules,
         resolveWebModule,
         bundleWebModule
@@ -60,41 +60,123 @@ describe("web-module loader/bundler (powered by rollup)", function () {
         expect(isRewriteRequired("http://127.0.0.1:8080/echo?query=message")).toBe(false);
     });
 
-    it("parseWebModuleURL", async function () {
-        expect(parseWebModuleURL(".")).toStrictEqual({module: ".", filename: ".", ext: undefined});
-        expect(parseWebModuleURL(".name")).toStrictEqual({module: ".", filename: ".name", ext: undefined});
-        expect(parseWebModuleURL(".name.ext")).toStrictEqual({module: ".", filename: ".name", ext: ".ext"});
-        expect(parseWebModuleURL("./name")).toStrictEqual({module: ".", filename: "name", ext: undefined});
-        expect(parseWebModuleURL("./name.ext")).toStrictEqual({module: ".", filename: "name", ext: ".ext"});
-        expect(parseWebModuleURL("/name")).toStrictEqual({module: undefined, filename: "/name", ext: undefined});
-        expect(parseWebModuleURL("/name.ext")).toStrictEqual({module: undefined, filename: "/name", ext: ".ext"});
-        expect(parseWebModuleURL("c:/name.ext")).toStrictEqual({module: "c:", filename: "name", ext: ".ext"});
-        expect(parseWebModuleURL("c://name.ext")).toStrictEqual({url:"c://name.ext"});
-        expect(parseWebModuleURL("ab://name.ext")).toStrictEqual({url:"ab://name.ext"});
-        expect(parseWebModuleURL("http://127.0.0.1:8080/echo?query=message")).toBe({url:"http://127.0.0.1:8080/echo?query=message"});
-        expect(parseWebModuleURL("/parent/name")).toStrictEqual({module: undefined, filename: "/parent/name", ext: undefined});
-        expect(parseWebModuleURL("parent/name")).toStrictEqual({module: "parent", filename: "name", ext: undefined});
-        expect(parseWebModuleURL("@parent/name")).toStrictEqual({module: "@parent/name", filename: undefined, ext: undefined});
-        expect(parseWebModuleURL("@parent/module/name")).toStrictEqual({module: "@parent/module", filename: "name", ext: undefined});
+    it("parseURL", async function () {
+        expect(parseURL("http://127.0.0.1:8080/echo?query=message")).toStrictEqual({
+            scheme: "http",
+            domain: "127.0.0.1:8080",
+            filename: "/echo",
+            search: "query=message"
+        });
+        expect(parseURL(".")).toStrictEqual({
+            scheme: undefined,
+            domain: undefined,
+            filename: ".",
+            search: undefined
+        });
+        expect(parseURL("name")).toStrictEqual({
+            scheme: undefined,
+            domain: undefined,
+            filename: "name",
+            search: undefined
+        });
+        expect(parseURL(".name.ext")).toStrictEqual({
+            scheme: undefined,
+            domain: undefined,
+            filename: ".name.ext",
+            search: undefined
+        });
+        expect(parseURL("name.js?query=q")).toStrictEqual({
+            scheme: undefined,
+            domain: undefined,
+            filename: "name.js",
+            search: "query=q"
+        });
+
+        expect(parseURL("./name")).toStrictEqual({
+            scheme: undefined,
+            domain: ".",
+            filename: "/name",
+            search: undefined
+        });
+        expect(parseURL("../a/b/name.ext?query=q&x=y")).toStrictEqual({
+            scheme: undefined,
+            domain: "..",
+            filename: "/a/b/name.ext",
+            search: "query=q&x=y"
+        });
+        expect(parseURL("/name")).toStrictEqual({
+            scheme: undefined,
+            domain: undefined,
+            filename: "/name",
+            search: undefined
+        });
+        expect(parseURL("/.name")).toStrictEqual({
+            scheme: undefined,
+            domain: undefined,
+            filename: "/.name",
+            search: undefined
+        });
+        expect(parseURL("c:/name.ext")).toStrictEqual({
+            scheme: undefined,
+            domain: "c:",
+            filename: "/name.ext",
+            search: undefined
+        });
+        expect(parseURL("c://name.ext")).toStrictEqual({
+            scheme: "c",
+            domain: undefined,
+            filename: "name.ext",
+            search: undefined
+        });
+        expect(parseURL("ab://name.ext")).toStrictEqual({
+            scheme: "ab",
+            domain: undefined,
+            filename: "name.ext",
+            search: undefined
+        });
+        expect(parseURL("/parent/name")).toStrictEqual({
+            scheme: undefined,
+            domain: undefined,
+            filename: "/parent/name",
+            search: undefined
+        });
+        expect(parseURL("parent/name")).toStrictEqual({
+            scheme: undefined,
+            domain: "parent",
+            filename: "/name",
+            search: undefined
+        });
+        expect(parseURL("@parent/name")).toStrictEqual({
+            scheme: undefined,
+            domain: "@parent/name",
+            filename: undefined,
+            search: undefined
+        });
+        expect(parseURL("@parent/module/name")).toStrictEqual({
+            scheme: undefined,
+            domain: "@parent/module",
+            filename: "/name",
+            search: undefined
+        });
     });
 
     it("isRewriteRequired", async function () {
         const base = "/a/b/c.js"
-        expect(resolveWebModuleImport(base,".")).toStrictEqual("/a/b/c.js");
-        expect(resolveWebModuleImport(base,".name")).toStrictEqual("/a/b/.name.js");
-        expect(resolveWebModuleImport(base,".name.ext")).toStrictEqual("/a/b/.name.ext");
-        expect(resolveWebModuleImport(base,"./name")).toStrictEqual("/a/b/name.js");
-        expect(resolveWebModuleImport(base,"./name.ext")).toStrictEqual("/a/b/name.ext");
-        expect(resolveWebModuleImport(base,"/name")).toStrictEqual("/name.js");
-        expect(resolveWebModuleImport(base,"/name.ext")).toStrictEqual("/name.ext");
-        expect(resolveWebModuleImport(base,"c:/name.ext")).toStrictEqual("c:/name.ext");
-        expect(resolveWebModuleImport(base,"c://name.ext")).toStrictEqual("c://name.ext");
-        expect(resolveWebModuleImport(base,"ab://name.ext")).toStrictEqual("ab://name.ext");
-        expect(resolveWebModuleImport(base,"http://127.0.0.1:8080/echo?query=message")).toBe("http://127.0.0.1:8080/echo?query=message");
-        expect(resolveWebModuleImport(base,"/parent/name")).toStrictEqual("/parent/name");
-        expect(resolveWebModuleImport(base,"parent/name")).toStrictEqual("parent/name");
-        expect(resolveWebModuleImport(base,"@parent/name")).toStrictEqual("@parent/name");
-        expect(resolveWebModuleImport(base,"@parent/module/name")).toStrictEqual("@parent/module/name");
+        expect(resolveWebModuleImport(base, ".")).toStrictEqual("/a/b/c.js");
+        expect(resolveWebModuleImport(base, ".name")).toStrictEqual("/a/b/.name.js");
+        expect(resolveWebModuleImport(base, ".name.ext")).toStrictEqual("/a/b/.name.ext");
+        expect(resolveWebModuleImport(base, "./name")).toStrictEqual("/a/b/name.js");
+        expect(resolveWebModuleImport(base, "./name.ext")).toStrictEqual("/a/b/name.ext");
+        expect(resolveWebModuleImport(base, "/name")).toStrictEqual("/name.js");
+        expect(resolveWebModuleImport(base, "/name.ext")).toStrictEqual("/name.ext");
+        expect(resolveWebModuleImport(base, "c:/name.ext")).toStrictEqual("c:/name.ext");
+        expect(resolveWebModuleImport(base, "c://name.ext")).toStrictEqual("c://name.ext");
+        expect(resolveWebModuleImport(base, "ab://name.ext")).toStrictEqual("ab://name.ext");
+        expect(resolveWebModuleImport(base, "http://127.0.0.1:8080/echo?query=message")).toBe("http://127.0.0.1:8080/echo?query=message");
+        expect(resolveWebModuleImport(base, "/parent/name")).toStrictEqual("/parent/name");
+        expect(resolveWebModuleImport(base, "parent/name")).toStrictEqual("parent/name");
+        expect(resolveWebModuleImport(base, "@parent/name")).toStrictEqual("@parent/name");
+        expect(resolveWebModuleImport(base, "@parent/module/name")).toStrictEqual("@parent/module/name");
     });
 
     it("graphql-tag", async function () {
