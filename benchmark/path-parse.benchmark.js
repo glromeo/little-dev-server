@@ -64,12 +64,12 @@ http://upenn.edu/et.xml?sit=vivamus&amet=metus&justo=arcu&morbi=adipiscing&ut=mo
 http://disqus.com/eget/tempus.aspx?consequat=nibh&dui=in&nec=hac&nisi=habitasse&volutpat=platea&eleifend=dictumst&donec=aliquam&ut=augue&dolor=quam&morbi=sollicitudin    
 `.split('\n');
 
-const rx = /((?<scheme>\w+):\/\/)?(?<domain>(@\w+\/)?[^/]+)?(?<filename>\/[^?]*)?(?<search>\?.*)?/;
+const regExp = /((?<scheme>\w+):\/\/)?(?<domain>(@\w+\/)?[^/]+)?(?<filename>\/[^?]*)?(?<search>\?.*)?/;
 
 new Suite()
-    .add('bare', function () {
+    .add('bare regExp', function () {
         urls.forEach(url => {
-            const match = rx.exec(url);
+            const match = regExp.exec(url);
             if (match) {
                 const {
                     scheme,
@@ -80,7 +80,7 @@ new Suite()
             }
         });
     })
-    .add('v1', function () {
+    .add('parseURL', function () {
         urls.forEach(url => {
             const {
                 scheme,
