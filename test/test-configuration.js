@@ -21,6 +21,7 @@ module.exports = {
     webModulesDir,
     parseCLI,
     testConfig: {
-        rootDir: fixture.path
+        rootDir: fixture.path,
+        clean: true
     }
 }

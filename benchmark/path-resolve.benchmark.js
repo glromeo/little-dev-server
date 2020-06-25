@@ -21,28 +21,44 @@ const paths = `
 amet/sapien/dignissim/vestibulum.js
 `.split('\n');
 
+const re = /(.[^.]+$)?/;
+
 new Suite()
     .add('posix resolve', function () {
         bases.forEach(base => {
             paths.forEach(path => {
-                posix.resolve(base, path);
+                posix.extname(posix.resolve(base, path));
             });
         });
     })
-    .add('posix join', function () {
+    .add('posix resolve', function () {
         bases.forEach(base => {
             paths.forEach(path => {
-                posix.join(base, path)
+                re.exec(posix.resolve(base, path));
             });
         });
     })
-    .add('string concatenation', function () {
-        bases.forEach(base => {
-            paths.forEach(path => {
-                const c = base + path;
-            });
-        });
-    })
+    // .add('posix resolve', function () {
+    //     bases.forEach(base => {
+    //         paths.forEach(path => {
+    //             posix.resolve(base, path);
+    //         });
+    //     });
+    // })
+    // .add('posix join', function () {
+    //     bases.forEach(base => {
+    //         paths.forEach(path => {
+    //             posix.join(base, path)
+    //         });
+    //     });
+    // })
+    // .add('string concatenation', function () {
+    //     bases.forEach(base => {
+    //         paths.forEach(path => {
+    //             const c = base + path;
+    //         });
+    //     });
+    // })
     .on('cycle', function (event) {
         console.log(String(event.target));
     })

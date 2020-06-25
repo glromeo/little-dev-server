@@ -20,11 +20,8 @@ describe("web-module loader/bundler (powered by rollup)", function () {
 
     const {
         nodeModuleBareUrl,
-        hasExt,
-        stripExt,
-        isRewriteRequired,
         parseURL,
-        rewriteImport,
+        resolveImport,
         modules,
         resolveWebModule,
         bundleWebModule
@@ -45,192 +42,91 @@ describe("web-module loader/bundler (powered by rollup)", function () {
     });
 
     it("nodeModuleBareUrl", async function () {
-        expect(nodeModuleBareUrl("C:\\little-dev-server\\node_modules\\@babel\\core\\lib\\parse.js")).toStrictEqual("@babel/core/lib/parse.js");
+        expect(nodeModuleBareUrl(`C:${path.sep}little-dev-server${path.sep}node_modules${path.sep}@babel${path.sep}core${path.sep}lib${path.sep}parse.js`)).toStrictEqual("@babel/core/lib/parse.js");
         expect(nodeModuleBareUrl("/little-dev-server/node_modules/@babel/core/lib/parse.js")).toStrictEqual("@babel/core/lib/parse.js");
     });
 
-    it("hasExt & stripExt are intentionally rough, they are meant to be used on a filename", async function () {
-        expect(hasExt(".name")).toBe(false);
-        expect(hasExt(".name.ext")).toBe(true);
-        expect(hasExt("name.ext")).toBe(true);
-        expect(hasExt("/.name")).toBe(true);
-        expect(hasExt("../name")).toBe(true);
-
-        expect(stripExt(".name")).toBe(".name");
-        expect(stripExt(".name.ext")).toBe(".name");
-        expect(stripExt("name.ext")).toBe("name");
-        expect(stripExt("/.name")).toBe("/");
-        expect(stripExt("../name")).toBe("../");
-    });
-
-    it("isRewriteRequired, again this is a rough function, you should use parseURL first", async function () {
-        expect(isRewriteRequired(".")).toBe(true);
-        expect(isRewriteRequired(".name")).toBe(true);
-        expect(isRewriteRequired(".name.ts")).toBe(true);
-        expect(isRewriteRequired("./name")).toBe(true);
-        expect(isRewriteRequired("./name.ext")).toBe(false);
-        expect(isRewriteRequired("/name")).toBe(true);
-        expect(isRewriteRequired("/name.ext")).toBe(false);
-        expect(isRewriteRequired("c:/name.ext")).toBe(true);
-        expect(isRewriteRequired("c://name.ext")).toBe(true);
-        expect(isRewriteRequired("ab://name.ext")).toBe(false);
-        expect(isRewriteRequired("http://127.0.0.1:8080/echo?query=message")).toBe(false);
-    });
-
     it("parseURL", async function () {
-        expect(parseURL(".")).toStrictEqual({
-            scheme: undefined,
-            domain: undefined,
-            filename: ".",
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL("..")).toStrictEqual({
-            scheme: undefined,
-            domain: undefined,
-            filename: "..",
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL("../.")).toStrictEqual({
-            scheme: undefined,
-            domain: undefined,
-            filename: "../.",
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL("http://127.0.0.1:8080/echo?query=message")).toStrictEqual({
-            scheme: "http",
-            domain: "127.0.0.1:8080",
-            filename: "echo",
-            ext: undefined,
-            search: "query=message"
-        });
-        expect(parseURL("name")).toStrictEqual({
-            scheme: undefined,
-            domain: undefined,
-            filename: "name",
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL(".name.ext")).toStrictEqual({
-            scheme: undefined,
-            domain: undefined,
-            filename: ".name.ext",
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL("name.js?query=q")).toStrictEqual({
-            scheme: undefined,
-            domain: undefined,
-            filename: "name.js",
-            ext: undefined,
-            search: "query=q"
-        });
+        function stripUndefined(obj) {
+            const out = {};
+            Object.keys(obj).filter(k => obj[k] !== undefined).forEach(k => out[k] = obj[k]);
+            return out;
+        }
 
-        expect(parseURL("./name")).toStrictEqual({
-            scheme: undefined,
-            domain: ".",
-            filename: "name",
-            ext: undefined,
-            search: undefined
+        expect(stripUndefined(parseURL("."))).toStrictEqual({filename: "."});
+        expect(stripUndefined(parseURL(".."))).toStrictEqual({filename: ".."});
+        expect(stripUndefined(parseURL("../"))).toStrictEqual({filename: "../"});
+        expect(stripUndefined(parseURL("../."))).toStrictEqual({filename: "../."});
+        expect(stripUndefined(parseURL("/"))).toStrictEqual({filename: "/"});
+        expect(stripUndefined(parseURL("/.."))).toStrictEqual({filename: "/.."});
+        expect(stripUndefined(parseURL("http://127.0.0.1:8080/echo?query=message"))).toStrictEqual({
+            scheme: "http", domain: "127.0.0.1:8080", filename: "/echo", search: "query=message"
         });
-        expect(parseURL("../a/b/name.ext?query=q&x=y")).toStrictEqual({
-            scheme: undefined,
-            domain: "..",
-            filename: "a/b/name.ext",
-            ext: undefined,
+        expect(stripUndefined(parseURL("http://username:password@127.0.0.1:8080/echo?query=message"))).toStrictEqual({
+            scheme: "http", domain: "username:password@127.0.0.1:8080", filename: "/echo", search: "query=message"
+        });
+        expect(stripUndefined(parseURL("name"))).toStrictEqual({module: "name"});
+        expect(stripUndefined(parseURL(".name.ext"))).toStrictEqual({filename: ".name.ext"});
+        expect(stripUndefined(parseURL("name.js?query=q"))).toStrictEqual({filename: "name.js", search: "query=q"});
+        expect(stripUndefined(parseURL("./name"))).toStrictEqual({filename: "./name"});
+        expect(stripUndefined(parseURL("../a/b/name.ext?query=q&x=y"))).toStrictEqual({
+            filename: "../a/b/name.ext",
             search: "query=q&x=y"
         });
-        expect(parseURL("/name")).toStrictEqual({
-            scheme: undefined,
-            domain: undefined,
-            filename: "name",
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL("/.name")).toStrictEqual({
-            scheme: undefined,
-            domain: undefined,
-            filename: ".name",
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL("c:/name.ext")).toStrictEqual({
-            scheme: undefined,
-            domain: "c:",
-            filename: "name.ext",
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL("c://name.ext")).toStrictEqual({
+        expect(stripUndefined(parseURL("/name"))).toStrictEqual({filename: "/name"});
+        expect(stripUndefined(parseURL("/.name"))).toStrictEqual({filename: "/.name"});
+        expect(stripUndefined(parseURL("c:/name.ext"))).toStrictEqual({filename: "c:/name.ext"});
+        expect(stripUndefined(parseURL("c://name.ext"))).toStrictEqual({scheme: "c", domain: "name.ext"});
+        expect(stripUndefined(parseURL("c://name.ext/file"))).toStrictEqual({
             scheme: "c",
-            domain: undefined,
-            filename: "name.ext",
-            ext: undefined,
-            search: undefined
+            domain: "name.ext",
+            filename: "/file"
         });
-        expect(parseURL("ab://name.ext")).toStrictEqual({
-            scheme: "ab",
-            domain: undefined,
-            filename: "name.ext",
-            ext: undefined,
-            search: undefined
+        expect(stripUndefined(parseURL("ab://name.ext?q=e"))).toStrictEqual({
+            scheme: "ab", domain: "name.ext", search: "q=e"
         });
-        expect(parseURL("/parent/name")).toStrictEqual({
-            scheme: undefined,
-            domain: undefined,
-            filename: "parent/name",
-            ext: undefined,
-            search: undefined
+        expect(stripUndefined(parseURL("c://name.ext/?q=e"))).toStrictEqual({
+            scheme: "c", domain: "name.ext", filename: "/", search: "q=e"
         });
-        expect(parseURL("parent/name")).toStrictEqual({
-            scheme: undefined,
-            domain: "parent",
-            filename: "name",
-            ext: undefined,
-            search: undefined
+        expect(stripUndefined(parseURL("/parent/name"))).toStrictEqual({filename: "/parent/name"});
+        expect(stripUndefined(parseURL("lit-html"))).toStrictEqual({module: "lit-html"});
+        expect(stripUndefined(parseURL("parent/name"))).toStrictEqual({module: "parent", filename: "name"});
+        expect(stripUndefined(parseURL("@parent/name"))).toStrictEqual({module: "@parent/name"});
+        expect(stripUndefined(parseURL("@parent/module/name"))).toStrictEqual({
+            module: "@parent/module", filename: "name",
         });
-        expect(parseURL("@parent/name")).toStrictEqual({
-            scheme: undefined,
-            domain: "@parent/name",
-            filename: undefined,
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL("@parent/module/name")).toStrictEqual({
-            scheme: undefined,
-            domain: "@parent/module",
-            filename: "name",
-            ext: undefined,
-            search: undefined
-        });
-        expect(parseURL("@parent/module/name.scss?type=module")).toStrictEqual({
-            scheme: undefined,
-            domain: "@parent/module",
-            filename: "name.scss",
-            ext: undefined,
-            search: "type=module"
+        expect(stripUndefined(parseURL("@parent/module/name.scss?type=module"))).toStrictEqual({
+            module: "@parent/module", filename: "name.scss", search: "type=module"
         });
     });
 
-    it("rewriteImport", async function () {
-        const base = "/a/b/c.js"
-        expect(rewriteImport(base, ".")).toStrictEqual("/a/b/c.js");
-        expect(rewriteImport(base, ".name")).toStrictEqual("/a/b/.name.js");
-        expect(rewriteImport(base, ".name.ext")).toStrictEqual("/a/b/.name.ext");
-        expect(rewriteImport(base, "./name")).toStrictEqual("/a/b/name.js");
-        expect(rewriteImport(base, "./name.ext")).toStrictEqual("/a/b/name.ext");
-        expect(rewriteImport(base, "/name")).toStrictEqual("/name.js");
-        expect(rewriteImport(base, "/name.ext")).toStrictEqual("/name.ext");
-        expect(rewriteImport(base, "c:/name.ext")).toStrictEqual("c:/name.ext");
-        expect(rewriteImport(base, "c://name.ext")).toStrictEqual("c://name.ext");
-        expect(rewriteImport(base, "ab://name.ext")).toStrictEqual("ab://name.ext");
-        expect(rewriteImport(base, "http://127.0.0.1:8080/echo?query=message")).toBe("http://127.0.0.1:8080/echo?query=message");
-        expect(rewriteImport(base, "/parent/name")).toStrictEqual("/parent/name");
-        expect(rewriteImport(base, "parent/name")).toStrictEqual("parent/name");
-        expect(rewriteImport(base, "@parent/name")).toStrictEqual("@parent/name");
-        expect(rewriteImport(base, "@parent/module/name")).toStrictEqual("@parent/module/name");
+    it("resolveImport", async function () {
+        const base = "/a/b"
+        expect(await resolveImport(base, "http://127.0.0.1:8080/echo?query=message")).toBe("http://127.0.0.1:8080/echo?query=message");
+        expect(await resolveImport(base, ".")).toStrictEqual("/a/b.js");
+        expect(await resolveImport(base, "..")).toStrictEqual("/a.js");
+        expect(await resolveImport(base, ".name")).toStrictEqual("/a/b/.name.js");
+        expect(await resolveImport(base, ".name.ext")).toStrictEqual("/a/b/.name.ext?type=module");
+        expect(await resolveImport(base, "./name")).toStrictEqual("/a/b/name.js");
+        expect(await resolveImport(base, "./name.ext?q=e")).toStrictEqual("/a/b/name.ext?type=module&q=e");
+        expect(await resolveImport(base, "/name")).toStrictEqual("/name.js");
+        expect(await resolveImport(base, "/name.mjs")).toStrictEqual("/name.mjs");
+        expect(await resolveImport(base, "c:/name.ext")).toStrictEqual("/a/b/c:/name.ext?type=module");
+        expect(await resolveImport(base, "file://c/name.ext")).toStrictEqual("file://c/name.ext");
+        expect(await resolveImport(base, "ab://name.ext")).toStrictEqual("ab://name.ext");
+        expect(await resolveImport(base, "/parent/name")).toStrictEqual("/parent/name.js");
+        try {
+            await resolveImport(base, "parent/name");
+            fail();
+        } catch(error) {
+            expect(error.message).toMatch(`Cannot find module 'parent/package.json'`);
+        }
+
+        expect(await resolveImport(base, "lit-html")).toStrictEqual("/web_modules/lit-html/lit-html.js");
+
+        expect(await resolveImport(base, "@polymer/paper-checkbox")).toStrictEqual("/web_modules/@polymer/paper-checkbox/paper-checkbox.js");
+        expect(await resolveImport(base, "@polymer/paper-checkbox/demo/index.html")).toStrictEqual("/web_modules/@polymer/paper-checkbox/demo/index.html?type=module");
+        expect(await resolveImport(base, "@webcomponents/shadycss/apply-shim.min.js")).toStrictEqual("/web_modules/@webcomponents/shadycss/apply-shim.min.js");
     });
 
     it("graphql-tag", async function () {

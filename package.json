@@ -64,7 +64,10 @@
     "benchmark": "^2.1.4",
     "coveralls": "^3.1.0",
     "jest": "^26.0.1",
-    "node-fetch": "^2.6.0"
+    "linkfs": "^2.1.0",
+    "memfs": "^3.2.0",
+    "node-fetch": "^2.6.0",
+    "unionfs": "^4.4.0"
   },
   "scripts": {
     "demo": "node lib/cli.js --root ./demo",
