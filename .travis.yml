@@ -3,9 +3,9 @@ node_js:
   - "node"
   - "14"
 
-branches:
-  only:
-    - master
+#branches:
+#  only:
+#    - master
 
 install:
   - yarn install
