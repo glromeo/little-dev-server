@@ -1,6 +1,6 @@
 const path = require("path");
 const fs = require("fs");
-const {testServer} = require("./test.config");
+const {testServer} = require("./test-configuration.js");
 
 describe("server", function () {
 
@@ -28,7 +28,7 @@ describe("server", function () {
             ca: fs.readFileSync(path.resolve(__dirname, "../cert/rootCA.pem"))
         }, (res) => {
             expect(res.statusCode).toBe(200);
-            expect(res.headers["content-type"]).toBe("text/plain; charset=utf-8");
+            expect(res.headers["content-type"]).toBe("text/plain; charset=UTF-8");
 
             let data = '';
             res.on('data', (chunk) => data += chunk);
@@ -51,7 +51,7 @@ describe("server", function () {
 
         req.on('response', (headers, flags) => {
             expect(headers[":status"]).toBe(200);
-            expect(headers["content-type"]).toBe("text/plain; charset=utf-8");
+            expect(headers["content-type"]).toBe("text/plain; charset=UTF-8");
             expect(flags).toBe(4);
         });
 

@@ -1,4 +1,4 @@
-const {testServer} = require("./test.config.js");
+const {testServer} = require("./test-configuration.js");
 
 describe("babel transformer integration tests", function () {
 
@@ -66,7 +66,7 @@ describe("babel transformer integration tests", function () {
         });
 
         const expected = expect(js);
-        expect(js).toContain("import style from \"./w3.scss?format=mjs\";");
+        expect(js).toContain("import style from \"./w3.scss?type=module\";");
     })
 
 })

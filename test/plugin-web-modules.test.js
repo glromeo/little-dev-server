@@ -6,45 +6,38 @@ jest.mock('fs', () => {
     return ufs;
 });
 
-const {config} = require("../configuration.js");
-const {traverseAsync} = require("./plugin-web-modules.js");
+const {configure} = require("../lib/configuration.js");
+const {useWebModulesPlugin} = require("../lib/utility/web-modules-plugin.js");
 
 describe("plugin-web-modules", function () {
 
     const fixtureDir = `${process.cwd()}/test/fixture`;
-
-    beforeAll(function () {
-
-        Object.assign(config, {
-            webModules: '/web_modules',
-            customResolveOptions: {
-                basedir: `${fixtureDir}/node_modules`
+    const config = configure({
+        rootDir: fixtureDir,
+        webModules: '/web_modules',
+        babel: {
+            babelrc: true,
+            caller: {
+                name: 'little-dev-server',
+                supportsStaticESM: true,
             },
-            babel: {
-                babelrc: true,
-                caller: {
-                    name: 'little-dev-server',
-                    supportsStaticESM: true,
-                },
-                sourceType: 'module',
-                sourceMaps: 'inline',
-                plugins: [
-                    ["@babel/plugin-syntax-import-meta"],
-                    ["@babel/plugin-proposal-decorators", {decoratorsBeforeExport: true}],
-                    ["@babel/plugin-proposal-class-properties"],
-                    ["@babel/plugin-transform-runtime", {
-                        "corejs": false,
-                        "helpers": true,
-                        "regenerator": false,
-                        "useESModules": true,
-                        "absoluteRuntime": true,
-                        "version": "7.5.5"
-                    }],
-                ]
-            }
-        });
-
+            sourceType: 'module',
+            sourceMaps: 'inline',
+            plugins: [
+                ["@babel/plugin-proposal-decorators", {decoratorsBeforeExport: true}],
+                ["@babel/plugin-proposal-class-properties"],
+                ["@babel/plugin-transform-runtime", {
+                    "corejs": false,
+                    "helpers": true,
+                    "regenerator": false,
+                    "useESModules": true,
+                    "absoluteRuntime": true,
+                    "version": "7.5.5"
+                }],
+            ]
+        }
     });
+    const {traverseAsync} = useWebModulesPlugin(config);
 
     it("lit-element & lit-html directive", async function () {
 
@@ -60,7 +53,7 @@ describe("plugin-web-modules", function () {
             @customElement("hello-world")
             export class HelloWorld extends LitElement {
               render() {
-                  return html\`<h1>Hello World! 👋🌍</h1>\`;
+                  return html\`<h1>\$\{unsafeHTML("<span>Hello World!</span>")\} 👋🌍</h1>\`;
               }
             }
         `, config.babel);
@@ -73,19 +66,19 @@ describe("plugin-web-modules", function () {
         const fs = require("fs");
         expect(fs.readdirSync("/web_modules")).toMatchObject(["lit-element", "lit-html"]);
         expect(JSON.parse(fs.readFileSync("/web_modules/lit-html/webpackage.json", "utf-8"))).toMatchObject({
-            "bundle": [
+            "bundle": expect.arrayContaining([
                 "lit-html.js",
-                "lib/default-template-processor.js",
                 "lib/template-result.js",
-                "lib/directive.js",
+                "lib/default-template-processor.js",
                 "lib/dom.js",
+                "lib/directive.js",
                 "lib/part.js",
                 "lib/parts.js",
                 "lib/render.js",
                 "lib/template-factory.js",
                 "lib/template-instance.js",
                 "lib/template.js",
-            ],
+            ]),
             "main": "lit-html.js",
             "name": "lit-html",
             "origin": `${fixtureDir}/node_modules/lit-html`,

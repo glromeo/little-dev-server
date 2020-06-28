@@ -1,27 +1,42 @@
-const {parseCLI, config, configure} = require("../lib/configuration.js");
+const {merge, configure} = require("../lib/configuration.js");
+const createServer = require("../lib/server.js");
+const fetch = require("node-fetch");
+const https = require("https");
+const fs = require("fs");
 
-const path = require("path");
+jest.mock("etag");
 
-class TestPath {
-    constructor(filename) {
-        this.path = path.resolve(__dirname, filename);
-    }
-    join(filename) {
-        return path.resolve(this.path, filename);
+const etag = require("etag");
+etag.mockReturnValue("test-etag");
+
+const testConfig = configure({config: `${__dirname}/fixture/server.config.js`});
+
+const httpsAgentOptions = {
+    ca: fs.readFileSync(`cert/rootCA.pem`),
+    key: fs.readFileSync(`cert/server.key`),
+    cert: fs.readFileSync(`cert/server.crt`),
+};
+
+async function testServer(options = {}) {
+
+    const {server, watcher, config} = await createServer(merge(testConfig, options));
+    const baseURL = module.exports.baseURL = `https://${config.host}:${config.port}`;
+    const agent = new https.Agent(httpsAgentOptions);
+    return {
+        server,
+        watcher,
+        config,
+        fetch(url, options = {}) {
+            options.agent = agent;
+            return fetch(baseURL + url, options);
+        }
     }
 }
-
-const base = new TestPath("..");
-const fixture = new TestPath("fixture");
-const webModulesDir = new TestPath("fixture/web_modules");
 
 module.exports = {
-    baseDir: base,
-    fixtureDir: fixture,
-    webModulesDir,
-    parseCLI,
-    testConfig: {
-        rootDir: fixture.path,
-        clean: true
-    }
+    testConfig,
+    testServer
 }
+
+
+

@@ -1,4 +1,4 @@
-const {testServer} = require("./test.config.js");
+const {testServer} = require("./test-configuration.js");
 const path = require("path");
 
 const {writeFileSync, statSync} = require("fs");
@@ -34,7 +34,7 @@ describe("pipeline test", function () {
             expect(response.headers.raw()).toMatchObject({
                 "etag": ["test-etag"],
                 "content-length": ["12"],
-                "content-type": ["text/plain; charset=utf-8"],
+                "content-type": ["text/plain; charset=UTF-8"],
                 "last-modified": [mtime.toUTCString()]
             });
             expect(response.headers.get('connection')).toMatch("close");
@@ -90,7 +90,7 @@ describe("pipeline test", function () {
 
         return fetch(`/src/sample-component.mjs?ignored`).then(response => {
             expect(response.status).toBe(200);
-            expect(response.headers.get('content-type')).toMatch("application/javascript; charset=utf-8");
+            expect(response.headers.get('content-type')).toMatch("application/javascript; charset=UTF-8");
             return response.text();
         }).then(text => {
             expect(text).toContain("import _decorate from \"/web_modules/@babel/runtime/helpers/esm/decorate.js\";");
@@ -102,21 +102,21 @@ describe("pipeline test", function () {
 
         return fetch(`/public/simple-sass.scss`).then(response => {
             expect(response.status).toBe(200);
-            expect(response.headers.get('content-type')).toMatch("text/css; charset=utf-8");
+            expect(response.headers.get('content-type')).toMatch("text/css; charset=UTF-8");
             return response.text();
         }).then(text => {
             expect(text).toBe("html body{background-color:red}\n");
         });
     });
 
-    it("sass files requested as format=mjs are transpiled by node-sass in module imports", async function () {
+    it("sass files requested as type=module are transpiled by node-sass in module imports", async function () {
 
-        return fetch(`/src/w3.scss?format=mjs`).then(response => {
+        return fetch(`/src/w3.scss?type=module`).then(response => {
             expect(response.status).toBe(200);
-            expect(response.headers.get('content-type')).toMatch("application/javascript; charset=utf-8");
+            expect(response.headers.get('content-type')).toMatch("application/javascript; charset=UTF-8");
             return response.text();
         }).then(text => {
-            expect(text).toContain(`import { css } from "/web_modules/lit-element/lit-element.js";`);
+            expect(text).toContain(`import {css} from "/web_modules/lit-element/lit-element.js";`);
             expect(text).toContain(`html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}`);
         });
     });

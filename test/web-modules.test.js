@@ -1,124 +1,53 @@
-const {
-    baseDir,
-    fixtureDir,
-    webModulesDir,
-    testConfig
-} = require("./test-configuration.js");
-
-const {
-    parseCLI,
-    config,
-    configure
-} = require("../lib/configuration.js");
-
 const fs = require("fs");
 const path = require("path");
+const {configure} = require("../lib/configuration.js");
+const {useWebModules} = require("../lib/utility/web-modules.js");
 
 describe("web-module loader/bundler (powered by rollup)", function () {
 
-    configure(testConfig);
+    const webModulesDir = `${__dirname}/fixture/web_modules`;
 
     const {
-        nodeModuleBareUrl,
-        parseURL,
-        resolveImport,
         modules,
+        resolveImport,
         resolveWebModule,
-        bundleWebModule
-    } = require("../lib/utility/web-modules.js");
+        rollupWebModule
+    } = useWebModules(configure({rootDir: `${__dirname}/fixture`}));
 
     it("config.clean cleans the web_modules directory", function () {
 
-        const testFile = webModulesDir.join("test-clean");
-        fs.mkdirSync(webModulesDir.path, {recursive: true});
+        const testFile = `${webModulesDir}/test-clean`;
+        fs.mkdirSync(webModulesDir, {recursive: true});
         fs.writeFileSync(testFile, "test");
 
-        configure({rootDir: fixtureDir.path, clean: false});
+        useWebModules(configure({rootDir: `${__dirname}/fixture`, clean: false}));
         expect(fs.existsSync(testFile)).toBeTruthy();
 
-        configure({rootDir: fixtureDir.path, clean: true});
+        useWebModules(configure({rootDir: `${__dirname}/fixture`, clean: true}));
         expect(fs.existsSync(testFile)).toBeFalsy();
-        expect(fs.existsSync(webModulesDir.path)).toBeTruthy();
-    });
-
-    it("nodeModuleBareUrl", async function () {
-        expect(nodeModuleBareUrl(`C:${path.sep}little-dev-server${path.sep}node_modules${path.sep}@babel${path.sep}core${path.sep}lib${path.sep}parse.js`)).toStrictEqual("@babel/core/lib/parse.js");
-        expect(nodeModuleBareUrl("/little-dev-server/node_modules/@babel/core/lib/parse.js")).toStrictEqual("@babel/core/lib/parse.js");
-    });
-
-    it("parseURL", async function () {
-        function stripUndefined(obj) {
-            const out = {};
-            Object.keys(obj).filter(k => obj[k] !== undefined).forEach(k => out[k] = obj[k]);
-            return out;
-        }
-
-        expect(stripUndefined(parseURL("."))).toStrictEqual({filename: "."});
-        expect(stripUndefined(parseURL(".."))).toStrictEqual({filename: ".."});
-        expect(stripUndefined(parseURL("../"))).toStrictEqual({filename: "../"});
-        expect(stripUndefined(parseURL("../."))).toStrictEqual({filename: "../."});
-        expect(stripUndefined(parseURL("/"))).toStrictEqual({filename: "/"});
-        expect(stripUndefined(parseURL("/.."))).toStrictEqual({filename: "/.."});
-        expect(stripUndefined(parseURL("http://127.0.0.1:8080/echo?query=message"))).toStrictEqual({
-            scheme: "http", domain: "127.0.0.1:8080", filename: "/echo", search: "query=message"
-        });
-        expect(stripUndefined(parseURL("http://username:password@127.0.0.1:8080/echo?query=message"))).toStrictEqual({
-            scheme: "http", domain: "username:password@127.0.0.1:8080", filename: "/echo", search: "query=message"
-        });
-        expect(stripUndefined(parseURL("name"))).toStrictEqual({module: "name"});
-        expect(stripUndefined(parseURL(".name.ext"))).toStrictEqual({filename: ".name.ext"});
-        expect(stripUndefined(parseURL("name.js?query=q"))).toStrictEqual({filename: "name.js", search: "query=q"});
-        expect(stripUndefined(parseURL("./name"))).toStrictEqual({filename: "./name"});
-        expect(stripUndefined(parseURL("../a/b/name.ext?query=q&x=y"))).toStrictEqual({
-            filename: "../a/b/name.ext",
-            search: "query=q&x=y"
-        });
-        expect(stripUndefined(parseURL("/name"))).toStrictEqual({filename: "/name"});
-        expect(stripUndefined(parseURL("/.name"))).toStrictEqual({filename: "/.name"});
-        expect(stripUndefined(parseURL("c:/name.ext"))).toStrictEqual({filename: "c:/name.ext"});
-        expect(stripUndefined(parseURL("c://name.ext"))).toStrictEqual({scheme: "c", domain: "name.ext"});
-        expect(stripUndefined(parseURL("c://name.ext/file"))).toStrictEqual({
-            scheme: "c",
-            domain: "name.ext",
-            filename: "/file"
-        });
-        expect(stripUndefined(parseURL("ab://name.ext?q=e"))).toStrictEqual({
-            scheme: "ab", domain: "name.ext", search: "q=e"
-        });
-        expect(stripUndefined(parseURL("c://name.ext/?q=e"))).toStrictEqual({
-            scheme: "c", domain: "name.ext", filename: "/", search: "q=e"
-        });
-        expect(stripUndefined(parseURL("/parent/name"))).toStrictEqual({filename: "/parent/name"});
-        expect(stripUndefined(parseURL("lit-html"))).toStrictEqual({module: "lit-html"});
-        expect(stripUndefined(parseURL("parent/name"))).toStrictEqual({module: "parent", filename: "name"});
-        expect(stripUndefined(parseURL("@parent/name"))).toStrictEqual({module: "@parent/name"});
-        expect(stripUndefined(parseURL("@parent/module/name"))).toStrictEqual({
-            module: "@parent/module", filename: "name",
-        });
-        expect(stripUndefined(parseURL("@parent/module/name.scss?type=module"))).toStrictEqual({
-            module: "@parent/module", filename: "name.scss", search: "type=module"
-        });
+        expect(fs.existsSync(webModulesDir)).toBeTruthy();
     });
 
     it("resolveImport", async function () {
-        const base = "/a/b"
+        const base = `${__dirname}/fixture/alpha/beta/gamma.js`
         expect(await resolveImport(base, "http://127.0.0.1:8080/echo?query=message")).toBe("http://127.0.0.1:8080/echo?query=message");
-        expect(await resolveImport(base, ".")).toStrictEqual("/a/b.js");
-        expect(await resolveImport(base, "..")).toStrictEqual("/a.js");
-        expect(await resolveImport(base, ".name")).toStrictEqual("/a/b/.name.js");
-        expect(await resolveImport(base, ".name.ext")).toStrictEqual("/a/b/.name.ext?type=module");
-        expect(await resolveImport(base, "./name")).toStrictEqual("/a/b/name.js");
-        expect(await resolveImport(base, "./name.ext?q=e")).toStrictEqual("/a/b/name.ext?type=module&q=e");
-        expect(await resolveImport(base, "/name")).toStrictEqual("/name.js");
-        expect(await resolveImport(base, "/name.mjs")).toStrictEqual("/name.mjs");
-        expect(await resolveImport(base, "c:/name.ext")).toStrictEqual("/a/b/c:/name.ext?type=module");
-        expect(await resolveImport(base, "file://c/name.ext")).toStrictEqual("file://c/name.ext");
-        expect(await resolveImport(base, "ab://name.ext")).toStrictEqual("ab://name.ext");
-        expect(await resolveImport(base, "/parent/name")).toStrictEqual("/parent/name.js");
+        expect(await resolveImport(base, ".")).toStrictEqual("./gamma.js");
+        expect(await resolveImport(base, "..")).toStrictEqual("../index.js");
+        expect(await resolveImport(base, ".delta")).toStrictEqual("./.delta.js");
+        expect(await resolveImport(base, "epsilon")).toStrictEqual("./epsilon.mjs");
+        expect(await resolveImport(base, ".delta.sigma")).toStrictEqual("/alpha/beta/.delta.sigma?type=module");
+        expect(await resolveImport(base, "./delta")).toStrictEqual("./delta.js");
+        expect(await resolveImport(base, "./delta.sigma?q=e")).toStrictEqual("./delta.sigma?type=module&q=e");
+        expect(await resolveImport(base, "/server.config.js")).toStrictEqual("/server.config.js");
+        expect(await resolveImport(base, "/server.config")).toStrictEqual("/server.config");
+        expect(await resolveImport(base, "c:/delta.sigma")).toStrictEqual("/alpha/beta/c:/delta.sigma?type=module");
+        expect(await resolveImport(base, "file://c/delta.sigma")).toStrictEqual("file://c/delta.sigma");
+        expect(await resolveImport(base, "ab://delta.sigma")).toStrictEqual("ab://delta.sigma");
+        expect(await resolveImport(base, "/parent/delta")).toStrictEqual("/parent/delta.js");
         try {
             await resolveImport(base, "parent/name");
             fail();
-        } catch(error) {
+        } catch (error) {
             expect(error.message).toMatch(`Cannot find module 'parent/package.json'`);
         }
 
@@ -144,7 +73,7 @@ describe("web-module loader/bundler (powered by rollup)", function () {
     });
 
     it("graphql language parser", async function () {
-        const webPkg = await bundleWebModule("graphql", "language/parser.js", "graphql/language/parser");
+        const webPkg = await rollupWebModule("graphql", "language/parser");
         expect(webPkg.imports.sort()).toMatchObject([
             "error/GraphQLError.mjs",
             "error/syntaxError.mjs",
@@ -168,7 +97,7 @@ describe("web-module loader/bundler (powered by rollup)", function () {
 
     it("lit-element (resolved by rollup) then lit-html", async function () {
 
-        expect(await bundleWebModule("lit-element", "lit-element.js", "lit-element")).toStrictEqual({
+        expect(await rollupWebModule("lit-element", "lit-element.js")).toStrictEqual({
             "filename": "lit-element.js",
             "imports": expect.arrayContaining([
                 "lit-element.js",
@@ -187,7 +116,7 @@ describe("web-module loader/bundler (powered by rollup)", function () {
             ])
         })
 
-        expect(await bundleWebModule("lit-html", "lit-html.js", "lit-html/lit-html")).toStrictEqual({
+        expect(await rollupWebModule("lit-html", "lit-html.js")).toStrictEqual({
             "filename": "lit-html.js",
             "imports": expect.arrayContaining([
                 "lit-html.js",
@@ -205,13 +134,13 @@ describe("web-module loader/bundler (powered by rollup)", function () {
         });
     });
 
-    it("lit-html/lib/render.js", async function () {
+    it("resolve web module: lit-html", async function () {
 
         const webPkg = await resolveWebModule("lit-html");
         expect(webPkg).toMatchObject({
             "name": "lit-html",
             "main": "lit-html.js",
-            "origin": expect.stringContaining("/little-dev-server/demo/node_modules/lit-html"),
+            "origin": path.join(__dirname, "fixture", "node_modules", "lit-html"),
             "dependencies": [],
             "bundle": new Set([
                 "lit-html.js",
@@ -225,22 +154,44 @@ describe("web-module loader/bundler (powered by rollup)", function () {
                 "lib/template-factory.js",
                 "lib/template-instance.js",
                 "lib/template.js"
-            ]),
-            "stats": {
-                "size": 154681
-            }
+            ])
         })
+
         expect(await webPkg.resolve("lib/render.js")).toMatch("lit-html.js");
+    });
 
-        // expect(await bundleWebModule("lit-html", "lit-html/directives/unsafe-html", "lit-html/directives/unsafe-html.js")).toStrictEqual({
-        //     imports: [
-        //         "lit-html/directives/unsafe-html.js"            ]
-        // });
+    it("bundle web module recognises what has been bundled in lit-html and avoids duplication", async function () {
 
-        // expect(await bundleWebModule("date-fns", "date-fns\\esm\\index", "D:\\Workspace\\@codebite\\node_modules\\date-fns\\esm\\index.js")).toBeUndefined();
+        modules.set("lit-html", {
+            "name": "lit-html",
+            "main": "lit-html.js",
+            "origin": path.join(__dirname, "fixture", "node_modules", "lit-html"),
+            "bundle": new Set([
+                "lit-html.js",
+                "lib/default-template-processor.js",
+                "lib/template-result.js",
+                "lib/directive.js",
+                "lib/dom.js",
+                "lib/part.js",
+                "lib/parts.js",
+                "lib/render.js",
+                "lib/template-factory.js",
+                "lib/template-instance.js",
+                "lib/template.js"
+            ])
+        });
 
-        // expect(await bundleWebModule("@babel/runtime", "@babel/runtime/helpers/esm/decorate", "/Users/Gianluca/Workbench/Workspace/@codebite/node_modules/@babel/runtime/helpers/esm/decorate.js")).toBeUndefined();
+        expect(await rollupWebModule("lit-html", "directives/unsafe-html")).toStrictEqual({
+            filename: "directives/unsafe-html.js",
+            imports: [
+                "directives/unsafe-html.js"
+            ]
+        });
 
-        // expect(await bundleWebModule("@babel/runtime", "@babel\\runtime\\helpers\\esm\\decorate", "D:\\Workspace\\@codebite\\node_modules\\@babel\\runtime\\helpers\\esm\\decorate.js")).toBeUndefined();
+        // expect(await rollupWebModule("date-fns", "date-fns\\esm\\index", "D:\\Workspace\\@codebite\\node_modules\\date-fns\\esm\\index.js")).toBeUndefined();
+        //
+        // expect(await rollupWebModule("@babel/runtime", "@babel/runtime/helpers/esm/decorate", "/Users/Gianluca/Workbench/Workspace/@codebite/node_modules/@babel/runtime/helpers/esm/decorate.js")).toBeUndefined();
+        //
+        // expect(await rollupWebModule("@babel/runtime", "@babel\\runtime\\helpers\\esm\\decorate", "D:\\Workspace\\@codebite\\node_modules\\@babel\\runtime\\helpers\\esm\\decorate.js")).toBeUndefined();
     })
 })
