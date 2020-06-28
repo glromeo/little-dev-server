@@ -24,7 +24,7 @@ module.exports = {
         ]
     },
     push: true,
-    cache: true,
-    clean: false,
+    cache: false,
+    clean: true,
     logLevel: "debug"
 }
