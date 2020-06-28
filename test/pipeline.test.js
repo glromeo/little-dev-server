@@ -94,7 +94,7 @@ describe("pipeline test", function () {
             return response.text();
         }).then(text => {
             expect(text).toContain("import _decorate from \"/web_modules/@babel/runtime/helpers/esm/decorate.js\";");
-            expect(text).toContain("<h1>Hello World! =K<");
+            expect(text).toContain("<h1>Hello World! 👋🌍<");
         });
     });
 
