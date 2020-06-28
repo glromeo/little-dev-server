@@ -1,3 +1,5 @@
+const {join} = require("path");
+
 jest.mock('fs', () => {
     const {vol} = require('memfs');
     vol.fromJSON({}, "/web_modules");
@@ -81,7 +83,7 @@ describe("plugin-web-modules", function () {
             ]),
             "main": "lit-html.js",
             "name": "lit-html",
-            "origin": `${fixtureDir}/node_modules/lit-html`,
+            "origin": join(fixtureDir, "node_modules", "lit-html")
         });
     });
 })

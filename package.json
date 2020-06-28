@@ -72,6 +72,7 @@
     "unionfs": "^4.4.0"
   },
   "scripts": {
+    "all": "cd test/fixture && yarn install && cd ../../demo && yarn install",
     "demo": "node lib/cli.js --root ./demo",
     "test": "jest --coverage",
     "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls"

@@ -1,19 +1,22 @@
 const {configure} = require("../lib/configuration.js");
 
-const path = require("path");
+const {resolve, join} = require("path");
 const fs = require("fs");
 
 describe("configuration", function () {
 
+    const baseDir = process.cwd();
+    const rootDir = join(__dirname, "fixture");
+
     it("can load config from a file", function () {
 
         let config = configure();
-        expect(config.webModules).toMatch(`${process.cwd()}/web_modules`);
+        expect(config.webModules).toMatch(join(baseDir, "web_modules"));
 
-        config = configure({config: `${__dirname}/fixture/server.config.js`});
-        expect(config.webModules).toMatch(`${__dirname}/fixture/web_modules`);
+        config = configure({config: join(rootDir, "server.config.js")});
+        expect(config.webModules).toMatch(join(rootDir, "web_modules"));
 
-        const configfile = `${__dirname}/fixture/config-${Date.now()}.js`;
+        const configfile = join(rootDir, "config-" + Date.now() + ".js");
         fs.writeFileSync(configfile, `module.exports = ${JSON.stringify({
             logLevel: "debug"
         }, undefined, " ")}`)
@@ -24,9 +27,9 @@ describe("configuration", function () {
     it("configure to use fixture as root dir", function () {
 
         const config = configure({
-            rootDir: `${__dirname}/fixture`,
+            rootDir: `${rootDir}`,
             mount: {
-                "/public": [`${__dirname}/fixture/public`]
+                "/public": [join(rootDir, "public")]
             },
             babel: {
                 plugins: expect.arrayContaining([
@@ -48,28 +51,28 @@ describe("configuration", function () {
         });
 
         expect(config.baseDir).toStrictEqual(process.cwd());
-        expect(config.rootDir).toStrictEqual(`${__dirname}/fixture`);
-        expect(config.nodeModules).toStrictEqual(`${__dirname}/fixture/node_modules`);
-        expect(config.webModules).toStrictEqual(`${__dirname}/fixture/web_modules`);
+        expect(config.rootDir).toStrictEqual(rootDir);
+        expect(config.nodeModules).toStrictEqual(join(rootDir, "node_modules"));
+        expect(config.webModules).toStrictEqual(join(rootDir, "web_modules"));
     });
 
     it("config.rootDir must be a directory", async function () {
         expect(() => configure({rootDir: __filename})).toThrowError("ENODIR: not a valid root directory");
-        expect(() => configure({rootDir: `${__dirname}/non_dir/`})).toThrowError("ENOENT: no such file or directory");
+        expect(() => configure({rootDir: join(__dirname, "non_dir")})).toThrowError("ENOENT: no such file or directory");
     });
 
     it("check default base & root dir", function () {
         const config = configure();
         expect(config.baseDir).toStrictEqual(process.cwd());
         expect(config.rootDir).toStrictEqual(process.cwd());
-        expect(config.nodeModules).toStrictEqual(path.resolve(config.rootDir, "node_modules"));
-        expect(config.webModules).toStrictEqual(path.resolve(config.rootDir, "web_modules"));
+        expect(config.nodeModules).toStrictEqual(resolve(config.rootDir, "node_modules"));
+        expect(config.webModules).toStrictEqual(resolve(config.rootDir, "web_modules"));
     });
 
     it("accepts configuration from package.json under devServer", function () {
         let config = configure();
         expect(config.testOption).toBeUndefined();
-        config = configure({rootDir: `${__dirname}/fixture`});
+        config = configure({rootDir});
         expect(config.version).toBeUndefined();
         expect(config.testOption).toStrictEqual("testValue");
     });

@@ -40,7 +40,7 @@ describe("pipeline test", function () {
             expect(response.headers.get('connection')).toMatch("close");
             expect(require("etag")).toHaveBeenCalledWith(
                 expect.stringMatching(
-                    "little-dev-server/test/fixture/public/hello-world.txt"
+                    "public/hello-world.txt"
                 ),
                 undefined
             );

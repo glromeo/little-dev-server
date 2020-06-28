@@ -1,49 +1,64 @@
 const fs = require("fs");
 const path = require("path");
+const {toPosix} = require("../lib/utility/quick-parse-url.js");
 const {configure} = require("../lib/configuration.js");
 const {useWebModules} = require("../lib/utility/web-modules.js");
 
 describe("web-module loader/bundler (powered by rollup)", function () {
 
-    const webModulesDir = `${__dirname}/fixture/web_modules`;
+    const fixtureDir = path.join(__dirname, "fixture");
+    const webModulesDir = path.join(fixtureDir, "web_modules");
 
     const {
         modules,
         resolveImport,
         resolveWebModule,
         rollupWebModule
-    } = useWebModules(configure({rootDir: `${__dirname}/fixture`}));
+    } = useWebModules(configure({rootDir: fixtureDir}));
+
+    beforeEach(function () {
+        modules.clear();
+    })
 
     it("config.clean cleans the web_modules directory", function () {
 
-        const testFile = `${webModulesDir}/test-clean`;
+        const testFile = path.join(webModulesDir, "test-clean");
         fs.mkdirSync(webModulesDir, {recursive: true});
         fs.writeFileSync(testFile, "test");
 
-        useWebModules(configure({rootDir: `${__dirname}/fixture`, clean: false}));
+        useWebModules(configure({rootDir: fixtureDir, clean: false}));
         expect(fs.existsSync(testFile)).toBeTruthy();
 
-        useWebModules(configure({rootDir: `${__dirname}/fixture`, clean: true}));
+        useWebModules(configure({rootDir: fixtureDir, clean: true}));
         expect(fs.existsSync(testFile)).toBeFalsy();
         expect(fs.existsSync(webModulesDir)).toBeTruthy();
     });
 
     it("resolveImport", async function () {
-        const base = `${__dirname}/fixture/alpha/beta/gamma.js`
+        const base = `${toPosix(fixtureDir)}/alpha/beta`
+
         expect(await resolveImport(base, "http://127.0.0.1:8080/echo?query=message")).toBe("http://127.0.0.1:8080/echo?query=message");
-        expect(await resolveImport(base, ".")).toStrictEqual("./gamma.js");
+        try {
+            await resolveImport(base, ".");
+            fail();
+        } catch(e) {
+            expect(e.message).toMatch("Cannot find module")
+        }
         expect(await resolveImport(base, "..")).toStrictEqual("../index.js");
-        expect(await resolveImport(base, ".delta")).toStrictEqual("./.delta.js");
-        expect(await resolveImport(base, "epsilon")).toStrictEqual("./epsilon.mjs");
-        expect(await resolveImport(base, ".delta.sigma")).toStrictEqual("/alpha/beta/.delta.sigma?type=module");
-        expect(await resolveImport(base, "./delta")).toStrictEqual("./delta.js");
+        try {
+            await resolveImport(base, "delta");
+            fail();
+        } catch(e) {
+            expect(e.message).toMatch("Cannot find module 'delta/package.json'")
+        }
+        expect(await resolveImport(base, "./epsilon")).toStrictEqual("./epsilon.mjs");
+        expect(await resolveImport(base, "./delta.sigma")).toStrictEqual("./delta.sigma?type=module");
         expect(await resolveImport(base, "./delta.sigma?q=e")).toStrictEqual("./delta.sigma?type=module&q=e");
         expect(await resolveImport(base, "/server.config.js")).toStrictEqual("/server.config.js");
-        expect(await resolveImport(base, "/server.config")).toStrictEqual("/server.config");
-        expect(await resolveImport(base, "c:/delta.sigma")).toStrictEqual("/alpha/beta/c:/delta.sigma?type=module");
+        expect(await resolveImport(base, "/src/broken")).toStrictEqual("/src/broken.js");
+        expect(await resolveImport(base, "c:/delta.sigma")).toStrictEqual("c:/delta.sigma?type=module");
         expect(await resolveImport(base, "file://c/delta.sigma")).toStrictEqual("file://c/delta.sigma");
         expect(await resolveImport(base, "ab://delta.sigma")).toStrictEqual("ab://delta.sigma");
-        expect(await resolveImport(base, "/parent/delta")).toStrictEqual("/parent/delta.js");
         try {
             await resolveImport(base, "parent/name");
             fail();
