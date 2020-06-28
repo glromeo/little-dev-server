@@ -3,6 +3,10 @@ node_js:
   - "node"
   - "14"
 
+#branches:
+#  only:
+#    - master
+
 install:
   - yarn install
   - cd demo
