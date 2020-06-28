@@ -25,20 +25,21 @@ describe("plugin-web-modules", function () {
             },
             sourceType: 'module',
             sourceMaps: 'inline',
-            plugins: [
-                ["@babel/plugin-proposal-decorators", {decoratorsBeforeExport: true}],
-                ["@babel/plugin-proposal-class-properties"],
-                ["@babel/plugin-transform-runtime", {
-                    "corejs": false,
-                    "helpers": true,
-                    "regenerator": false,
-                    "useESModules": true,
-                    "absoluteRuntime": true,
-                    "version": "7.5.5"
-                }],
-            ]
+            // plugins: [
+            //     ["@babel/plugin-proposal-decorators", {decoratorsBeforeExport: true}],
+            //     ["@babel/plugin-proposal-class-properties"],
+            //     ["@babel/plugin-transform-runtime", {
+            //         "corejs": false,
+            //         "helpers": true,
+            //         "regenerator": false,
+            //         "useESModules": true,
+            //         "absoluteRuntime": true,
+            //         "version": "7.5.5"
+            //     }],
+            // ]
         }
     });
+
     const {traverseAsync} = useWebModulesPlugin(config);
 
     it("lit-element & lit-html directive", async function () {

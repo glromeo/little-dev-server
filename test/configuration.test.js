@@ -52,7 +52,7 @@ describe("configuration", function () {
 
         expect(config.baseDir).toStrictEqual(process.cwd());
         expect(config.rootDir).toStrictEqual(rootDir);
-        expect(config.nodeModules).toStrictEqual(join(rootDir, "node_modules"));
+        expect(config.nodeModules).toStrictEqual([join(rootDir, "node_modules"), join(baseDir, "demo", "node_modules")]);
         expect(config.webModules).toStrictEqual(join(rootDir, "web_modules"));
     });
 
