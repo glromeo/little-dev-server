@@ -66,7 +66,7 @@ describe("babel transformer integration tests", function () {
         });
 
         const expected = expect(js);
-        expect(js).toContain("import style from \"./w3.scss?type=module\";");
+        expect(js).toContain("import style from \"/src/w3.scss?type=module\";");
     })
 
 })

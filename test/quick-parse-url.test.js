@@ -17,6 +17,8 @@ describe("quick parse URL", function () {
             return out;
         }
 
+        expect(stripUndefined(quickParseURL())).toStrictEqual({module: "undefined"});
+
         expect(stripUndefined(quickParseURL("."))).toStrictEqual({pathname: "."});
         expect(stripUndefined(quickParseURL(".."))).toStrictEqual({pathname: ".."});
         expect(stripUndefined(quickParseURL("../"))).toStrictEqual({pathname: "../"});

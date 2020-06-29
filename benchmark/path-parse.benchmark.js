@@ -3,7 +3,7 @@ const {Suite} = require('benchmark');
 
 const path = require("path");
 
-const {parseURL} = require("../lib/utility/web-modules.js");
+const {quickParseURL} = require("../lib/utility/quick-parse-url.js");
 
 const urls = `
 http://jigsy.com/cubilia/curae.jsp?mauris=gravida&eget=sem&massa=praesent&tempor=id&convallis=massa&nulla=id&neque=nisl&libero=venenatis&convallis=lacinia&eget=aenean&eleifend=sit&luctus=amet&ultricies=justo&eu=morbi&nibh=ut&quisque=odio&id=cras&justo=mi&sit=pede&amet=malesuada&sapien=in&dignissim=imperdiet&vestibulum=et&vestibulum=commodo&ante=vulputate&ipsum=justo&primis=in&in=blandit&faucibus=ultrices&orci=enim&luctus=lorem&et=ipsum&ultrices=dolor&posuere=sit&cubilia=amet&curae=consectetuer&nulla=adipiscing&dapibus=elit&dolor=proin&vel=interdum&est=mauris&donec=non&odio=ligula&justo=pellentesque&sollicitudin=ultrices&ut=phasellus&suscipit=id&a=sapien&feugiat=in&et=sapien&eros=iaculis&vestibulum=congue&ac=vivamus&est=metus&lacinia=arcu&nisi=adipiscing&venenatis=molestie&tristique=hendrerit&fusce=at&congue=vulputate&diam=vitae&id=nisl&ornare=aenean&imperdiet=lectus&sapien=pellentesque&urna=eget&pretium=nunc&nisl=donec&ut=quis
@@ -80,14 +80,14 @@ new Suite()
             }
         });
     })
-    .add('parseURL', function () {
+    .add('quickParseURL', function () {
         urls.forEach(url => {
             const {
                 scheme,
-                domain,
-                filename,
+                module,
+                pathname,
                 search
-            } = parseURL(url);
+            } = quickParseURL(url);
         });
     })
     .on('cycle', function (event) {

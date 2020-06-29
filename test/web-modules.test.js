@@ -35,30 +35,34 @@ describe("web-module loader/bundler (powered by rollup)", function () {
     });
 
     it("resolveImport", async function () {
-        const base = `${toPosix(fixtureDir)}/alpha/beta`
+        const base = path.join(fixtureDir, "alpha", "beta");
 
         expect(await resolveImport(base, "http://127.0.0.1:8080/echo?query=message")).toBe("http://127.0.0.1:8080/echo?query=message");
+
         try {
             await resolveImport(base, ".");
             fail();
         } catch(e) {
             expect(e.message).toMatch("Cannot find module")
         }
-        expect(await resolveImport(base, "..")).toStrictEqual("../index.js");
+
+        expect(await resolveImport(base, "..")).toStrictEqual("/alpha/index.js");
+
         try {
             await resolveImport(base, "delta");
             fail();
         } catch(e) {
             expect(e.message).toMatch("Cannot find module 'delta/package.json'")
         }
-        expect(await resolveImport(base, "./epsilon")).toStrictEqual("./epsilon.mjs");
-        expect(await resolveImport(base, "./delta.sigma")).toStrictEqual("./delta.sigma?type=module");
-        expect(await resolveImport(base, "./delta.sigma?q=e")).toStrictEqual("./delta.sigma?type=module&q=e");
+
+        expect(await resolveImport(base, "./epsilon")).toStrictEqual("/alpha/beta/epsilon.mjs");
+        expect(await resolveImport(base, "./delta.sigma")).toStrictEqual("/alpha/beta/delta.sigma?type=module");
+        expect(await resolveImport(base, "./delta.sigma?q=e")).toStrictEqual("/alpha/beta/delta.sigma?type=module&q=e");
         expect(await resolveImport(base, "/server.config.js")).toStrictEqual("/server.config.js");
         expect(await resolveImport(base, "/src/broken")).toStrictEqual("/src/broken.js");
-        expect(await resolveImport(base, "c:/delta.sigma")).toStrictEqual("c:/delta.sigma?type=module");
         expect(await resolveImport(base, "file://c/delta.sigma")).toStrictEqual("file://c/delta.sigma");
         expect(await resolveImport(base, "ab://delta.sigma")).toStrictEqual("ab://delta.sigma");
+
         try {
             await resolveImport(base, "parent/name");
             fail();
