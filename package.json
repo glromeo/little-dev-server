@@ -1,7 +1,7 @@
 {
   "name": "little-dev-server",
   "main": "./lib/cli.js",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "A node http2 server for fun...",
   "author": "Gianluca Romeo <glromeo@gmail.com> (https://github.com/glromeo/little-dev-server)",
   "license": "MIT",
