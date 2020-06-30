@@ -4,80 +4,155 @@ const {toPosix} = require("../lib/utility/quick-parse-url.js");
 const {configure} = require("../lib/configuration.js");
 const {useWebModules} = require("../lib/utility/web-modules.js");
 
-describe("web-module loader/bundler (powered by rollup)", function () {
+describe("web modules", function () {
 
-    const fixtureDir = path.join(__dirname, "fixture");
-    const webModulesDir = path.join(fixtureDir, "web_modules");
+    const fixturedir = path.join(__dirname, "fixture");
+    const webModulesDir = path.join(fixturedir, "web_modules");
 
     const {
         modules,
         resolveImport,
         resolveWebModule,
         rollupWebModule
-    } = useWebModules(configure({rootDir: fixtureDir}));
+    } = useWebModules(configure({rootDir: fixturedir}));
 
     beforeEach(function () {
-        modules.clear();
+        modules.init();
     })
 
-    it("config.clean cleans the web_modules directory", function () {
+    it("if config.clean is set the web_modules directory is wiped out at initialization", function () {
 
         const testFile = path.join(webModulesDir, "test-clean");
         fs.mkdirSync(webModulesDir, {recursive: true});
         fs.writeFileSync(testFile, "test");
 
-        useWebModules(configure({rootDir: fixtureDir, clean: false}));
+        const configuration = configure({rootDir: fixturedir, clean: false});
+        useWebModules(configuration);
         expect(fs.existsSync(testFile)).toBeTruthy();
 
-        useWebModules(configure({rootDir: fixtureDir, clean: true}));
+        // ...remember that useXXX is memoized
+        useWebModules(configuration);
+        expect(fs.existsSync(testFile)).toBeTruthy();
+
+        useWebModules(configure({rootDir: fixturedir, clean: true}));
         expect(fs.existsSync(testFile)).toBeFalsy();
         expect(fs.existsSync(webModulesDir)).toBeTruthy();
     });
 
-    it("resolveImport", async function () {
-        const base = path.join(fixtureDir, "alpha", "beta");
+    it("javascript import resolution", async function () {
 
-        expect(await resolveImport(base, "http://127.0.0.1:8080/echo?query=message")).toBe("http://127.0.0.1:8080/echo?query=message");
+        const basedir = path.join(fixturedir, "alpha", "beta");
 
-        try {
-            await resolveImport(base, ".");
-            fail();
-        } catch(e) {
-            expect(e.message).toMatch("Cannot find module")
-        }
+        // urls go unmodified
+        await expect(resolveImport(basedir, "http://127.0.0.1:8080/echo?query=message")).resolves.toBe(
+            "http://127.0.0.1:8080/echo?query=message"
+        );
+        await expect(resolveImport(basedir, "file:///echo.do?query=message")).resolves.toBe(
+            "file:///echo.do?query=message"
+        );
 
-        expect(await resolveImport(base, "..")).toStrictEqual("/alpha/index.js");
+        // modules are resolved from local workspaces
+        await expect(resolveImport(basedir, "@test/fixture")).resolves.toBe(
+            "/web_modules/@test/fixture/alpha/index.js"
+        );
+        await expect(resolveImport(basedir, "package-a")).resolves.toBe(
+            "/web_modules/package-a/index.mjs"
+        );
+        await expect(resolveImport(basedir, "package-b")).resolves.toBe(
+            "/web_modules/package-b/index.mjs"
+        );
+        await expect(resolveImport(basedir, "package-c")).rejects.toMatchObject({
+            message: expect.stringContaining("Cannot find module 'package-c/package.json'")
+        });
 
-        try {
-            await resolveImport(base, "delta");
-            fail();
-        } catch(e) {
-            expect(e.message).toMatch("Cannot find module 'delta/package.json'")
-        }
+        // ...if they are present
+        await expect(resolveImport(basedir, "parent/name")).rejects.toMatchObject({
+            message: expect.stringContaining(`Cannot find module 'parent/package.json'`)
+        });
 
-        expect(await resolveImport(base, "./epsilon")).toStrictEqual("/alpha/beta/epsilon.mjs");
-        expect(await resolveImport(base, "./delta.sigma")).toStrictEqual("/alpha/beta/delta.sigma?type=module");
-        expect(await resolveImport(base, "./delta.sigma?q=e")).toStrictEqual("/alpha/beta/delta.sigma?type=module&q=e");
-        expect(await resolveImport(base, "/server.config.js")).toStrictEqual("/server.config.js");
-        expect(await resolveImport(base, "/src/broken")).toStrictEqual("/src/broken.js");
-        expect(await resolveImport(base, "file://c/delta.sigma")).toStrictEqual("file://c/delta.sigma");
-        expect(await resolveImport(base, "ab://delta.sigma")).toStrictEqual("ab://delta.sigma");
+        // import "." is meaningless
+        await expect(resolveImport(basedir, ".")).rejects.toMatchObject({
+            message: expect.stringContaining("Cannot find module")
+        });
 
-        try {
-            await resolveImport(base, "parent/name");
-            fail();
-        } catch (error) {
-            expect(error.message).toMatch(`Cannot find module 'parent/package.json'`);
-        }
+        // import "." is the parent module so in the fixture resolves to the index file
+        await expect(resolveImport(basedir, "..")).resolves.toBe(
+            "/alpha/index.js"
+        );
 
-        expect(await resolveImport(base, "lit-html")).toStrictEqual("/web_modules/lit-html/lit-html.js");
+        // import are resolved from the basedir following require semantic
 
-        expect(await resolveImport(base, "@polymer/paper-checkbox")).toStrictEqual("/web_modules/@polymer/paper-checkbox/paper-checkbox.js");
-        expect(await resolveImport(base, "@polymer/paper-checkbox/demo/index.html")).toStrictEqual("/web_modules/@polymer/paper-checkbox/demo/index.html?type=module");
-        expect(await resolveImport(base, "@webcomponents/shadycss/apply-shim.min.js")).toStrictEqual("/web_modules/@webcomponents/shadycss/apply-shim.min.js");
+        // there's no delta in fixture/alpha/beta
+        await expect(resolveImport(basedir, "delta")).rejects.toMatchObject({
+            message: expect.stringContaining("Cannot find module 'delta/package.json'")
+        });
+        // should resolve fixture/alpha/beta/epsilon.mjs
+        await expect(resolveImport(basedir, "./epsilon")).resolves.toBe(
+            "/alpha/beta/epsilon.mjs"
+        );
+        // should resolve fixture/alpha/beta/delta.sigma adding query for type=module
+        await expect(resolveImport(basedir, "./delta.sigma")).resolves.toBe(
+            "/alpha/beta/delta.sigma?type=module"
+        );
+        // ...leaving any existing query alone
+        await expect(resolveImport(basedir, "./delta.sigma?q=e")).resolves.toBe(
+            "/alpha/beta/delta.sigma?type=module&q=e"
+        );
+
+        // there's src in fixture (root dir) yet it's not a package
+        await expect(resolveImport(fixturedir, "src")).rejects.toMatchObject({
+            message: expect.stringContaining("Cannot find module 'src/package.json'")
+        });
+        // ...it has index.js though!
+        await expect(resolveImport(fixturedir, "./src")).resolves.toBe(
+            "/src/index.js"
+        );
+
+        // absolute files are resolved from root dir
+        await expect(resolveImport(basedir, "/server.config.js")).resolves.toBe(
+            "/server.config.js"
+        );
+        // ...even if they miss their ext
+        await expect(resolveImport(basedir, "/src/broken")).resolves.toBe(
+            "/src/broken.js"
+        );
+
+        // web_modules are bundled on demand and resolved urls point to their main file when possible
+
+        await expect(resolveImport(basedir, "lit-html")).resolves.toBe(
+            "/web_modules/lit-html/lit-html.js"
+        );
+        await expect(resolveImport(basedir, "lit-html/lit-html.js")).resolves.toBe(
+            "/web_modules/lit-html/lit-html.js"
+        );
+        await expect(resolveImport(basedir, "lit-html/lib/parts.js")).resolves.toBe(
+            "/web_modules/lit-html/lit-html.js"
+        );
+        await expect(resolveImport(basedir, "lit-html/lib/shady-render.js")).resolves.toBe(
+            "/web_modules/lit-html/lib/shady-render.js"
+        );
+        await expect(resolveImport(basedir, "lit-html/directives/unsafe-html.js")).resolves.toBe(
+            "/web_modules/lit-html/directives/unsafe-html.js"
+        );
+
+        // ...it works with namespaces too
+        await expect(resolveImport(basedir, "@polymer/paper-checkbox")).resolves.toBe(
+            "/web_modules/@polymer/paper-checkbox/paper-checkbox.js"
+        );
+        // it can handle non javascript files by copying them over and resolving using query type=module
+        await expect(resolveImport(basedir, "@polymer/paper-checkbox/demo/index.html")).resolves.toBe(
+            "/web_modules/@polymer/paper-checkbox/demo/index.html?type=module"
+        );
     });
 
-    it("graphql-tag", async function () {
+    it("importing non modules is discouraged but works", async function () {
+        const basedir = path.join(fixturedir, "alpha", "beta");
+        await expect(resolveImport(basedir, "@webcomponents/shadycss/apply-shim.min.js")).resolves.toBe(
+            "/web_modules/@webcomponents/shadycss/apply-shim.min.js"
+        );
+    });
+
+    it("graphql-tag (and graphql pulled in as dependency)", async function () {
         const graphqlTagModule = await resolveWebModule("graphql-tag");
         expect(graphqlTagModule).toMatchObject({
             "bundle": {},
@@ -89,34 +164,20 @@ describe("web-module loader/bundler (powered by rollup)", function () {
                 "size": 19377
             }
         });
-    });
-
-    it("graphql language parser", async function () {
-        const webPkg = await rollupWebModule("graphql", "language/parser");
-        expect(webPkg.imports.sort()).toMatchObject([
-            "error/GraphQLError.mjs",
-            "error/syntaxError.mjs",
-            "jsutils/defineToJSON.mjs",
-            "jsutils/defineToStringTag.mjs",
-            "jsutils/devAssert.mjs",
-            "jsutils/inspect.mjs",
-            "jsutils/isObjectLike.mjs",
-            "jsutils/nodejsCustomInspectSymbol.mjs",
-            "language/blockString.mjs",
-            "language/directiveLocation.mjs",
-            "language/kinds.mjs",
-            "language/lexer.mjs",
-            "language/location.mjs",
-            "language/parser.mjs",
-            "language/printLocation.mjs",
-            "language/source.mjs",
-            "language/tokenKind.mjs",
-        ]);
+        expect(fs.readFileSync(path.resolve(fixturedir, "web_modules/graphql-tag/src/index.js"), "UTF-8")).toMatch(
+            `import parser from '/web_modules/graphql/language/parser';`
+        )
+        // the resolveImport should prefer mjs over js
+        expect(await resolveImport(fixturedir, "graphql/language/parser")).toMatch(
+            "/web_modules/graphql/language/parser.mjs"
+        );
+        // because of the main entry point the size is quite big!
+        expect(modules.get("graphql").bundle.size).toBe(126);
     });
 
     it("lit-element (resolved by rollup) then lit-html", async function () {
 
-        expect(await rollupWebModule("lit-element", "lit-element.js")).toStrictEqual({
+        await expect(rollupWebModule("lit-element", "lit-element.js")).resolves.toMatchObject({
             "filename": "lit-element.js",
             "imports": expect.arrayContaining([
                 "lit-element.js",
@@ -135,7 +196,7 @@ describe("web-module loader/bundler (powered by rollup)", function () {
             ])
         })
 
-        expect(await rollupWebModule("lit-html", "lit-html.js")).toStrictEqual({
+        await expect(rollupWebModule("lit-html", "lit-html.js")).resolves.toMatchObject({
             "filename": "lit-html.js",
             "imports": expect.arrayContaining([
                 "lit-html.js",
@@ -176,7 +237,7 @@ describe("web-module loader/bundler (powered by rollup)", function () {
             ])
         })
 
-        expect(await webPkg.resolve("lib/render.js")).toMatch("lit-html.js");
+        await expect(webPkg.resolve("lib/render.js")).resolves.toMatch("lit-html.js");
     });
 
     it("bundle web module recognises what has been bundled in lit-html and avoids duplication", async function () {
@@ -200,17 +261,11 @@ describe("web-module loader/bundler (powered by rollup)", function () {
             ])
         });
 
-        expect(await rollupWebModule("lit-html", "directives/unsafe-html")).toStrictEqual({
+        await expect(rollupWebModule("lit-html", "directives/unsafe-html")).resolves.toMatchObject({
             filename: "directives/unsafe-html.js",
             imports: [
                 "directives/unsafe-html.js"
             ]
         });
-
-        // expect(await rollupWebModule("date-fns", "date-fns\\esm\\index", "D:\\Workspace\\@codebite\\node_modules\\date-fns\\esm\\index.js")).toBeUndefined();
-        //
-        // expect(await rollupWebModule("@babel/runtime", "@babel/runtime/helpers/esm/decorate", "/Users/Gianluca/Workbench/Workspace/@codebite/node_modules/@babel/runtime/helpers/esm/decorate.js")).toBeUndefined();
-        //
-        // expect(await rollupWebModule("@babel/runtime", "@babel\\runtime\\helpers\\esm\\decorate", "D:\\Workspace\\@codebite\\node_modules\\@babel\\runtime\\helpers\\esm\\decorate.js")).toBeUndefined();
     })
 })
