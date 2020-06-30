@@ -12,6 +12,9 @@
     "/resources",
     "/server.config.js"
   ],
+  "bin": {
+    "little-dev-server": "./lib/cli.js"
+  },
   "keywords": [
     "logging",
     "color",
@@ -70,6 +73,7 @@
     "linkfs": "^2.1.0",
     "memfs": "^3.2.0",
     "node-fetch": "^2.6.0",
+    "selfsigned": "^1.10.7",
     "unionfs": "^4.4.0"
   },
   "scripts": {
