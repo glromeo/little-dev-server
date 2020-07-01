@@ -53,13 +53,13 @@ describe("web modules", function () {
 
         // modules are resolved from local workspaces
         await expect(resolveImport(basedir, "@test/fixture")).resolves.toBe(
-            "/web_modules/@test/fixture/alpha/index.js"
+            "/alpha/index.js"
         );
         await expect(resolveImport(basedir, "package-a")).resolves.toBe(
-            "/web_modules/package-a/index.mjs"
+            "/workspace-a/index.mjs"
         );
         await expect(resolveImport(basedir, "package-b")).resolves.toBe(
-            "/web_modules/package-b/index.mjs"
+            "/workspaces/workspace-b/index.mjs"
         );
         await expect(resolveImport(basedir, "package-c")).rejects.toMatchObject({
             message: expect.stringContaining("Cannot find module 'package-c/package.json'")
