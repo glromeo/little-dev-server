@@ -39,7 +39,6 @@
     "@rollup/plugin-node-resolve": "^8.0.1",
     "@types/yargs": "^15.0.5",
     "chokidar": "^3.0.2",
-    "connect": "^3.7.0",
     "deepmerge": "^4.2.2",
     "etag": "^1.8.1",
     "get-stream": "^5.1.0",
