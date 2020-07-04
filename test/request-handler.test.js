@@ -39,10 +39,10 @@ describe("Router", function () {
             }
         });
 
-        expect(router.routes["abc"][GET]).toMatchObject({handler: h1, params: []});
-        expect(router.routes["abc"]["def"]["ghi"][GET]).toMatchObject({handler: h2, params: []});
-        expect(router.routes["abc"]["def"][PUT]).toMatchObject({handler: h3, params: []});
-        expect(router.routes["abc"]["def"]["jkl"][POST]).toMatchObject({handler: h4, params: []});
+        expect(router.routes["abc"][GET]).toMatchObject({handler: h1});
+        expect(router.routes["abc"]["def"]["ghi"][GET]).toMatchObject({handler: h2});
+        expect(router.routes["abc"]["def"][PUT]).toMatchObject({handler: h3});
+        expect(router.routes["abc"]["def"]["jkl"][POST]).toMatchObject({handler: h4});
     });
 
     it("can handle path params", async function () {
