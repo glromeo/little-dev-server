@@ -1,4 +1,4 @@
-const {createRouter, METHODS} = require("../lib/request-handler.js");
+const {createRouter, METHODS: {GET, PUT, POST}} = require("../lib/request-handler.js");
 
 describe("Router", function () {
 
@@ -43,17 +43,13 @@ describe("Router", function () {
             }
         });
 
-        const {GET, PUT, POST} = METHODS;
-
         expect(router.routes["abc"][GET]).toMatchObject({handler: h1, params: []});
         expect(router.routes["abc"]["def"]["ghi"][GET]).toMatchObject({handler: h2, params: []});
         expect(router.routes["abc"]["def"][PUT]).toMatchObject({handler: h3, params: []});
         expect(router.routes["abc"]["def"]["jkl"][POST]).toMatchObject({handler: h4, params: []});
     });
 
-    it("can handle globs", async function () {
-
-        const {GET, PUT, POST} = METHODS;
+    it("can handle path params", async function () {
 
         let mock1 = jest.fn();
         router.get("/abc/:name", mock1);
@@ -91,5 +87,12 @@ describe("Router", function () {
         expect(()=>router.get("/abc/:name/:address", jest.fn())).toThrow("handler already registered for: GET");
     });
 
-
+    it("can handle ** to match the rest of the url", function () {
+        const mock = jest.fn();
+        router.get("/abc/:name/**", mock);
+        router.route(GET, "/abc/def");
+        expect(mock).toHaveBeenCalledTimes(0);
+        router.route(GET, "/abc/def/jkl");
+        expect(mock).toHaveBeenCalledWith();
+    });
 });
