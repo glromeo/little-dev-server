@@ -21,10 +21,7 @@ module.exports = {
             }],
         ]
     },
-    push: true,
-    cache: true,
     clean: true,
-
     customResolveOptions: {
         basedir: __dirname,
     }

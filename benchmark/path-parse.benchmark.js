@@ -1,4 +1,3 @@
-const {Slash, AtSign} = require("../lib/utility/char-codes.js");
 const {Suite} = require('benchmark');
 
 const path = require("path");

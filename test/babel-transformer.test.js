@@ -1,4 +1,4 @@
-const {testServer} = require("./test-configuration.js");
+const {testServer} = require("./test.setup.js");
 
 describe("babel transformer integration tests", function () {
 

@@ -23,8 +23,5 @@ module.exports = {
             }],
         ]
     },
-    push: true,
-    cache: true,
-    clean: false,
     logLevel: "debug"
 }

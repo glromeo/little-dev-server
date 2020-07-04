@@ -1,13 +1,8 @@
 const {merge, configure} = require("../lib/configuration.js");
-const createServer = require("../lib/server.js");
+const {startServer} = require("../lib/server.js");
 const fetch = require("node-fetch");
 const https = require("https");
 const fs = require("fs");
-
-jest.mock("etag");
-
-const etag = require("etag");
-etag.mockReturnValue("test-etag");
 
 const testConfig = configure({config: `${__dirname}/fixture/server.config.js`});
 
@@ -19,23 +14,25 @@ const httpsAgentOptions = {
 
 async function testServer(options = {}) {
 
-    const {server, watcher, config} = await createServer(merge(testConfig, options));
-    const baseURL = module.exports.baseURL = `https://${config.host}:${config.port}`;
+    const config = merge(testConfig, options);
+    const {server, watcher} = await startServer(config);
+    const baseURL = `https://${config.host}:${config.port}`;
     const agent = new https.Agent(httpsAgentOptions);
     return {
+        config,
         server,
         watcher,
-        config,
-        fetch(url, options = {}) {
+        baseURL,
+        fetch(pathname, options = {}) {
             options.agent = agent;
-            return fetch(baseURL + url, options);
+            return fetch(baseURL + pathname, options);
         }
     }
 }
 
 module.exports = {
     testConfig,
-    testServer
+    testServer,
 }
 
 

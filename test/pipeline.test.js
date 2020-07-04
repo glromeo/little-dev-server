@@ -1,7 +1,10 @@
-const {testServer} = require("./test-configuration.js");
+const {testServer} = require("./test.setup.js");
 const path = require("path");
 
 const {writeFileSync, statSync} = require("fs");
+
+jest.mock("etag");
+require("etag").mockReturnValue("test-etag");
 
 describe("pipeline test", function () {
 
