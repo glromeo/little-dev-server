@@ -48,34 +48,36 @@ describe("Router", function () {
 
     it("can handle path params", async function () {
 
+        let req = {headers: {}}, res = {};
+
         let mock1 = jest.fn();
         router.get("/abc/:name", mock1);
-        router.route("GET", "/abc/def");
-        expect(mock1).toHaveBeenCalledWith({name: "def"});
+        await router.route("GET", "/abc/def", req, res);
+        expect(mock1).toHaveBeenCalledWith({name: "def"}, {}, req, res);
 
         let mock2 = jest.fn();
         router.get("/abc/def/:alias", mock2);
-        router.route("GET", "/abc/def/ijk");
-        expect(mock2).toHaveBeenCalledWith({alias: "ijk"});
+        await router.route("GET", "/abc/def/ijk", req, res);
+        expect(mock2).toHaveBeenCalledWith({alias: "ijk"}, {}, req, res);
         expect(mock1).toHaveBeenCalledTimes(1);
 
         let mock3 = jest.fn();
         router.get("/abc/xyz", mock3);
-        router.route("GET", "/abc/def");
+        await router.route("GET", "/abc/def", req, res);
         expect(mock3).not.toHaveBeenCalled();
         expect(mock1).toHaveBeenCalledTimes(2);
 
-        router.route("GET", "/abc/xyz");
+        await router.route("GET", "/abc/xyz", req, res);
         expect(mock3).toHaveBeenCalledTimes(1);
 
         let mock4 = jest.fn();
         router.get("/abc/:name/:address", mock4);
-        router.route("GET", "/abc/def/ghi");
+        await router.route("GET", "/abc/def/ghi", req, res);
         expect(mock1).toHaveBeenCalledTimes(2);
         expect(mock2).toHaveBeenCalledTimes(2);
         expect(mock4).not.toHaveBeenCalled();
-        router.route("GET", "/abc/xxx/yyy");
-        expect(mock4).toHaveBeenCalledWith({name: "xxx", address: "yyy"});
+        await router.route("GET", "/abc/xxx/yyy", req, res);
+        expect(mock4).toHaveBeenCalledWith({name: "xxx", address: "yyy"}, {}, req, res);
     });
 
     it("can't register handler twice", async function () {
@@ -84,23 +86,24 @@ describe("Router", function () {
         expect(() => router.get("/abc/:name/:address", jest.fn())).toThrow("route already used for: GET");
     });
 
-    it("can handle get parameters and ** to match the rest of the url", function () {
+    it("can handle get parameters and ** to match the rest of the url", async function () {
+        let req = {headers: {}}, res = {};
         const mock = jest.fn();
         router.get("/abc/:name/**", mock);
-        expect(router.route("GET", "/abc/def")).toBeUndefined();
+        expect(await router.route("GET", "/abc/def", {headers: {}}, {})).toBeUndefined();
         expect(mock).toHaveBeenCalledTimes(0);
-        router.route("GET", "/abc/def/jkl");
-        expect(mock).toHaveBeenCalledWith({"name": "def"});
+        await router.route("GET", "/abc/def/jkl", req, res);
+        expect(mock).toHaveBeenCalledWith({"name": "def"}, {}, req, res);
     });
 
     it("can handle content type and accept type headers", async function () {
         const mock = jest.fn();
         router.get("/abc/:name/**", mock);
-        router.route("GET", "/abc/def").service({
+        router.route("GET", "/abc/def", {
             headers: {
                 "content-type": "application/json"
             }
-        });
+        }, {});
     });
 
     describe("integration test", function () {
@@ -122,13 +125,20 @@ describe("Router", function () {
 
         it("get /echo/:name", async function () {
 
-            router.post("/api/:name", function ({params, payload, pathname}) {
-                fail();
-                return {...params, ...payload};
+            router.post("/api/:name", function (params, payload, req, res) {
+                return {
+                    ...this,
+                    params,
+                    payload
+                };
             })
 
-            server.on('request', function (req, res) {
-                router.route(req.method, req.url, req, res);
+            server.on('request', async function (req, res) {
+                try {
+                    await router.route(req.method, req.url, req, res);
+                } catch (e) {
+                    log.error(e);
+                }
             })
 
             const res = await new Promise(function (resolve, reject) {
@@ -160,9 +170,19 @@ describe("Router", function () {
             });
 
             expect(JSON.parse(data)).toMatchObject({
-                "name": "gianluca",
-                "surname": "romeo",
-                "message": "Hello World!"
+                vars: {
+                    "name": "gianluca",
+                },
+                query: {
+                    "surname": "romeo",
+                },
+                params: {
+                    "name": "gianluca",
+                    "surname": "romeo",
+                },
+                payload: {
+                    "message": "Hello World!"
+                }
             });
         });
     });
