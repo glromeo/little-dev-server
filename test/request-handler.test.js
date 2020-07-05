@@ -50,31 +50,31 @@ describe("Router", function () {
 
         let mock1 = jest.fn();
         router.get("/abc/:name", mock1);
-        router.route("GET", "/abc/def").service();
+        router.route("GET", "/abc/def");
         expect(mock1).toHaveBeenCalledWith({name: "def"});
 
         let mock2 = jest.fn();
         router.get("/abc/def/:alias", mock2);
-        router.route("GET", "/abc/def/ijk").service();
+        router.route("GET", "/abc/def/ijk");
         expect(mock2).toHaveBeenCalledWith({alias: "ijk"});
         expect(mock1).toHaveBeenCalledTimes(1);
 
         let mock3 = jest.fn();
         router.get("/abc/xyz", mock3);
-        router.route("GET", "/abc/def").service();
+        router.route("GET", "/abc/def");
         expect(mock3).not.toHaveBeenCalled();
         expect(mock1).toHaveBeenCalledTimes(2);
 
-        router.route("GET", "/abc/xyz").service();
+        router.route("GET", "/abc/xyz");
         expect(mock3).toHaveBeenCalledTimes(1);
 
         let mock4 = jest.fn();
         router.get("/abc/:name/:address", mock4);
-        router.route("GET", "/abc/def/ghi").service();
+        router.route("GET", "/abc/def/ghi");
         expect(mock1).toHaveBeenCalledTimes(2);
         expect(mock2).toHaveBeenCalledTimes(2);
         expect(mock4).not.toHaveBeenCalled();
-        router.route("GET", "/abc/xxx/yyy").service();
+        router.route("GET", "/abc/xxx/yyy");
         expect(mock4).toHaveBeenCalledWith({name: "xxx", address: "yyy"});
     });
 
@@ -89,7 +89,7 @@ describe("Router", function () {
         router.get("/abc/:name/**", mock);
         expect(router.route("GET", "/abc/def")).toBeUndefined();
         expect(mock).toHaveBeenCalledTimes(0);
-        router.route("GET", "/abc/def/jkl").service();
+        router.route("GET", "/abc/def/jkl");
         expect(mock).toHaveBeenCalledWith({"name": "def"});
     });
 
@@ -122,12 +122,13 @@ describe("Router", function () {
 
         it("get /echo/:name", async function () {
 
-            router.post("/api/:name", function (body) {
-                return body;
+            router.post("/api/:name", function ({params, payload, pathname}) {
+                fail();
+                return {...params, ...payload};
             })
 
             server.on('request', function (req, res) {
-                router.route(req.method, req.url).service(req, res);
+                router.route(req.method, req.url, req, res);
             })
 
             const res = await new Promise(function (resolve, reject) {
