@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const {quickParseURL, nodeModuleBareUrl, isBare} = require("../lib/utility/quick-parse-url.js");
+const {quickParseURL, quickParseSimpleURL, nodeModuleBareUrl, isBare} = require("../lib/utility/quick-parse-url.js");
 
 describe("quick parse URL", function () {
 
@@ -33,7 +33,10 @@ describe("quick parse URL", function () {
         });
         expect(stripUndefined(quickParseURL("name"))).toStrictEqual({module: "name"});
         expect(stripUndefined(quickParseURL(".name.ext"))).toStrictEqual({pathname: ".name.ext"});
-        expect(stripUndefined(quickParseURL("name.js?query=q"))).toStrictEqual({pathname: "name.js", search: "query=q"});
+        expect(stripUndefined(quickParseURL("name.js?query=q"))).toStrictEqual({
+            pathname: "name.js",
+            search: "query=q"
+        });
         expect(stripUndefined(quickParseURL("./name"))).toStrictEqual({pathname: "./name"});
         expect(stripUndefined(quickParseURL("../a/b/name.ext?query=q&x=y"))).toStrictEqual({
             pathname: "../a/b/name.ext",
@@ -74,5 +77,21 @@ describe("quick parse URL", function () {
         expect(!isBare(".a")).toBe(false);
         expect(!isBare("..a")).toBe(false);
     })
+
+    it("quickParseSimpleURL", function () {
+        expect(quickParseSimpleURL("/")).toMatchObject({pathname: "/"});
+        expect(quickParseSimpleURL("/abc/def")).toMatchObject({pathname: "/abc/def"});
+        expect(quickParseSimpleURL("/abc/def#ghi")).toMatchObject({pathname: "/abc/def", fragment: "ghi"});
+        expect(quickParseSimpleURL("/abc/def?q=v")).toMatchObject({
+            pathname: "/abc/def",
+            search: "q=v",
+            query: {q: "v"}
+        });
+        expect(quickParseSimpleURL("/abc/def?a%20b=c%3fd")).toMatchObject({
+            pathname: "/abc/def",
+            search: "a%20b=c%3fd",
+            query: {"a b": "c?d"}
+        });
+    });
 
 })
