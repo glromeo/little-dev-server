@@ -3,8 +3,11 @@ const {startServer} = require("../lib/server.js");
 const fetch = require("node-fetch");
 const https = require("https");
 const fs = require("fs");
+const path = require("path");
 
-const testConfig = configure({config: `${__dirname}/fixture/server.config.js`});
+const fixtureDir = path.join(__dirname, "fixture");
+
+const testConfig = configure({config: `${fixtureDir}/server.config.js`});
 
 const httpsAgentOptions = {
     ca: fs.readFileSync(`cert/rootCA.pem`),
@@ -31,6 +34,7 @@ async function testServer(options = {}) {
 }
 
 module.exports = {
+    fixtureDir,
     testConfig,
     testServer,
 }

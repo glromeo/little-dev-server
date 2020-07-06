@@ -22,9 +22,7 @@ describe("Router", function () {
     }
 
     beforeEach(function () {
-
         router = createRouter();
-
         res = {
             writeHead: jest.fn(),
             end: jest.fn(),
@@ -145,14 +143,18 @@ describe("Router", function () {
             }
         });
 
-        await router.route(req, res);
+        const {
+            content,
+            contentType,
+            contentLength,
+            lastModified
+        } = await router.route(req, res)
 
         expect(route).toHaveBeenCalledWith({"name": "gianluca"}, "hello", req, res);
-        expect(res.writeHead).toHaveBeenCalledWith(200, {
-            "content-type": "text/plain; charset=UTF-8",
-            "content-length": 20
-        });
-        expect(res.end).toHaveBeenCalledWith(expect.stringMatching(`hello gianluca romeo`))
+        expect(content).toMatch(`hello gianluca romeo`);
+        expect(contentType).toMatch("text/plain; charset=UTF-8");
+        expect(contentLength).toBe(20);
+        expect(lastModified).toBeInstanceOf(Date);
     });
 
     describe("integration test", function () {
@@ -181,7 +183,18 @@ describe("Router", function () {
             })
 
             server.on('request', async function (req, res) {
-                router.route(req, res)
+                const {
+                    content,
+                    contentType,
+                    contentLength,
+                    lastModified
+                } = await router.route(req, res);
+                res.writeHead(200, {
+                    "content-type": contentType,
+                    "content-length": contentLength,
+                    "last-modified": new Date("Mon, 06 Jul 2020 00:24:03 GMT").toUTCString()
+                });
+                res.end(content);
             });
 
             const res = await new Promise(function (resolve, reject) {
@@ -204,6 +217,8 @@ describe("Router", function () {
             const data = await new Promise(function (resolve, reject) {
                 expect(res.statusCode).toBe(200);
                 expect(res.headers["content-type"]).toBe("application/json; charset=UTF-8");
+                expect(res.headers["content-length"]).toBe("165");
+                expect(res.headers["last-modified"]).toBe("Mon, 06 Jul 2020 00:24:03 GMT");
                 let data = "";
                 res.on("data", (chunk) => data += chunk);
                 res.on("error", reject);

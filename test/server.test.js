@@ -17,7 +17,7 @@ describe("server", function () {
             routes: {
                 "/": {
                     "GET": (req, res) => {
-                        res.headers 
+                        res.headers
                         setInterval(() => {
                             res.send(Date.now());
                         }, 1000);
@@ -33,7 +33,7 @@ describe("server", function () {
         let config, server, watcher, fetch;
 
         beforeAll(async function () {
-            const test = await testServer({port: 3040});
+            const test = await testServer({server:{port: 3040}});
             config = test.config;
             server = test.server;
             watcher = test.watcher;
@@ -44,31 +44,27 @@ describe("server", function () {
             await server.shutdown();
         });
 
-        it("can serve https", () => new Promise(done => {
+        it("can serve https", async function () {
 
-            require("https").get({
-                hostname: config.host,
-                port: config.port,
+            const res = await new Promise(done => require("https").get({
+                hostname: config.server.host,
+                port: config.server.port,
                 path: "/public/hello-world.txt",
                 method: "GET",
                 ca: fs.readFileSync(path.resolve(__dirname, "../cert/rootCA.pem"))
-            }, (res) => {
-                expect(res.statusCode).toBe(200);
-                expect(res.headers["content-type"]).toBe("text/plain; charset=UTF-8");
+            }, done));
 
-                let data = "";
-                res.on("data", (chunk) => data += chunk);
-                res.on("end", () => {
-                    expect(data).toMatch("Hello World!");
-                    done();
-                });
+            expect(res.statusCode). toBe(200);
+            expect(res.headers["content-type"]).toBe("text/plain; charset=UTF-8");
 
-            }).on("error", fail);
-        }));
+            const data = await contentText(res);
+
+            expect(data).toMatch("Hello World!");
+        });
 
         it("can serve http2", () => new Promise(done => {
 
-            const client = require("http2").connect(`https://${config.host}:${config.port}`, {
+            const client = require("http2").connect(`https://${config.server.host}:${config.server.port}`, {
                 ca: fs.readFileSync(path.resolve(__dirname, "../cert/rootCA.pem"))
             });
             client.on("error", fail);
