@@ -19,7 +19,7 @@ async function testServer(options = {}) {
 
     const config = merge(testConfig, options);
     const {server, watcher} = await startServer(config);
-    const baseURL = `https://${config.host}:${config.port}`;
+    const baseURL = `https://${config.server.host}:${config.server.port}`;
     const agent = new https.Agent(httpsAgentOptions);
     return {
         config,

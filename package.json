@@ -10,7 +10,7 @@
     "/cert/server.crt",
     "/lib",
     "/resources",
-    "/server.config.js"
+    "/routing.config.js"
   ],
   "bin": {
     "little-dev-server": "./lib/cli.js"
