@@ -1,6 +1,6 @@
 const {useServeStatic} = require("./lib/servlet/serve-static.js");
 
-module.exports = (config, router) => {
+module.exports = (router, config) => {
 
     const {serveStatic} = useServeStatic(config);
 
