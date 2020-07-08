@@ -1,10 +1,6 @@
-const {useServeStatic} = require("./lib/servlet/serve-static.js");
+const {useServeStatic} = require("./lib/middleware/serve-static.js");
 
 module.exports = (router, config) => {
 
-    const {serveStatic} = useServeStatic(config);
-
-    router.get("/**", function (ctx) {
-        return serveStatic(ctx);
-    })
+    router.get("/**", useServeStatic(config))
 }
