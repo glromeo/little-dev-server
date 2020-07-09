@@ -1,7 +1,7 @@
 const {resolve} = require("path");
 
 module.exports = {
-    nodeModules: [resolve(__dirname, 'node_modules'), resolve(__dirname, '../../demo/node_modules')],
+    nodeModules: [resolve(__dirname, "node_modules"), resolve(__dirname, "../../demo/node_modules")],
     webModules: resolve(__dirname, "web_modules"),
     mount: {
         "/mount-example": [resolve(__dirname, "public/override")],
@@ -18,11 +18,11 @@ module.exports = {
                 "useESModules": true,
                 "absoluteRuntime": true,
                 "version": "7.5.5"
-            }],
+            }]
         ]
     },
     clean: true,
     customResolveOptions: {
-        basedir: __dirname,
+        basedir: __dirname
     }
-}
+};

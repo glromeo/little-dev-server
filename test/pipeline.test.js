@@ -40,7 +40,7 @@ describe("pipeline test", function () {
                 "content-type": ["text/plain; charset=UTF-8"],
                 "last-modified": [mtime.toUTCString()]
             });
-            expect(response.headers.get('connection')).toMatch("close");
+            expect(response.headers.get("connection")).toMatch("close");
             expect(require("etag")).toHaveBeenCalledWith(
                 expect.stringMatching(
                     "public/hello-world.txt"
@@ -83,7 +83,7 @@ describe("pipeline test", function () {
         };
 
         return fetch(`/public/hello-world.txt`).then(response => {
-            expect(require("etag")).toHaveBeenCalledWith(expect.anything(),expect.objectContaining({
+            expect(require("etag")).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
                 weak: true
             }));
         });
@@ -93,7 +93,7 @@ describe("pipeline test", function () {
 
         return fetch(`/src/sample-component.mjs?ignored`).then(response => {
             expect(response.status).toBe(200);
-            expect(response.headers.get('content-type')).toMatch("application/javascript; charset=UTF-8");
+            expect(response.headers.get("content-type")).toMatch("application/javascript; charset=UTF-8");
             return response.text();
         }).then(text => {
             expect(text).toContain("import _decorate from \"/web_modules/@babel/runtime/helpers/esm/decorate.js\";");
@@ -105,7 +105,7 @@ describe("pipeline test", function () {
 
         return fetch(`/public/simple-sass.scss`).then(response => {
             expect(response.status).toBe(200);
-            expect(response.headers.get('content-type')).toMatch("text/css; charset=UTF-8");
+            expect(response.headers.get("content-type")).toMatch("text/css; charset=UTF-8");
             return response.text();
         }).then(text => {
             expect(text).toBe("html body{background-color:red}\n");
@@ -116,7 +116,7 @@ describe("pipeline test", function () {
 
         return fetch(`/src/w3.scss?type=module`).then(response => {
             expect(response.status).toBe(200);
-            expect(response.headers.get('content-type')).toMatch("application/javascript; charset=UTF-8");
+            expect(response.headers.get("content-type")).toMatch("application/javascript; charset=UTF-8");
             return response.text();
         }).then(text => {
             expect(text).toContain(`import {css} from "/web_modules/lit-element/lit-element.js";`);
@@ -142,7 +142,7 @@ describe("pipeline test", function () {
             .cache_functionality_test {
                 background-color: white;
             }
-        `, 'utf-8');
+        `, "utf-8");
 
         await fetch(`/__temp_file__.scss`).then(res => res.text()).then(text => {
             expect(text).toContain(".cache_functionality_test");
@@ -150,7 +150,7 @@ describe("pipeline test", function () {
 
         const watched = watcher.getWatched();
 
-        expect(watched['.'].length).toBe(1);
+        expect(watched["."].length).toBe(1);
 
         await new Promise(resolve => {
 
@@ -160,7 +160,7 @@ describe("pipeline test", function () {
                 .updated_class {
                     background-color: red;
                 }
-            `, 'utf-8');
+            `, "utf-8");
         });
 
         await fetch(`/__temp_file__.scss`).then(res => res.text()).then(text => {

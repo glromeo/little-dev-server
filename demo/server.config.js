@@ -4,7 +4,7 @@ const rootDir = __dirname;
 
 module.exports = {
     rootDir: rootDir,
-    nodeModules: [resolve(rootDir, 'node_modules'), resolve(rootDir, '..', 'node_modules')],
+    nodeModules: [resolve(rootDir, "node_modules"), resolve(rootDir, "..", "node_modules")],
     webModules: resolve(rootDir, "web_modules"),
     mount: {
         "/public": [resolve(rootDir, "public")]
@@ -20,8 +20,8 @@ module.exports = {
                 "useESModules": true,
                 "absoluteRuntime": true,
                 "version": "7.5.5"
-            }],
+            }]
         ]
     },
     logLevel: "debug"
-}
+};

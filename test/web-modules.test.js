@@ -18,7 +18,7 @@ describe("web modules", function () {
 
     beforeEach(function () {
         modules.init();
-    })
+    });
 
     it("if config.clean is set the web_modules directory is wiped out at initialization", function () {
 
@@ -166,7 +166,7 @@ describe("web modules", function () {
         });
         expect(fs.readFileSync(path.resolve(fixturedir, "web_modules/graphql-tag/src/index.js"), "UTF-8")).toMatch(
             `import parser from '/web_modules/graphql/language/parser';`
-        )
+        );
         // the resolveImport should prefer mjs over js
         expect(await resolveImport(fixturedir, "graphql/language/parser")).toMatch(
             "/web_modules/graphql/language/parser.mjs"
@@ -183,7 +183,7 @@ describe("web modules", function () {
                 "lit-element.js",
                 "lib/updating-element.js",
                 "lib/decorators.js",
-                "lib/css-tag.js",
+                "lib/css-tag.js"
             ])
         });
 
@@ -192,9 +192,9 @@ describe("web modules", function () {
                 "lit-element.js",
                 "lib/updating-element.js",
                 "lib/decorators.js",
-                "lib/css-tag.js",
+                "lib/css-tag.js"
             ])
-        })
+        });
 
         await expect(rollupWebModule("lit-html", "lit-html.js")).resolves.toMatchObject({
             "filename": "lit-html.js",
@@ -235,7 +235,7 @@ describe("web modules", function () {
                 "lib/template-instance.js",
                 "lib/template.js"
             ])
-        })
+        });
 
         await expect(webPkg.resolve("lib/render.js")).resolves.toMatch("lit-html.js");
     });
@@ -267,5 +267,5 @@ describe("web modules", function () {
                 "directives/unsafe-html.js"
             ]
         });
-    })
-})
+    });
+});

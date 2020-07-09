@@ -1,10 +1,10 @@
 const {join} = require("path");
 
-jest.mock('fs', () => {
-    const {vol} = require('memfs');
+jest.mock("fs", () => {
+    const {vol} = require("memfs");
     vol.fromJSON({}, "/web_modules");
-    const {ufs} = require('unionfs');
-    ufs.use(jest.requireActual('fs')).use(vol);
+    const {ufs} = require("unionfs");
+    ufs.use(jest.requireActual("fs")).use(vol);
     return ufs;
 });
 
@@ -16,15 +16,15 @@ describe("plugin-web-modules", function () {
     const fixtureDir = `${process.cwd()}/test/fixture`;
     const config = configure({
         rootDir: fixtureDir,
-        webModules: '/web_modules',
+        webModules: "/web_modules",
         babel: {
             babelrc: true,
             caller: {
-                name: 'little-dev-server',
-                supportsStaticESM: true,
+                name: "little-dev-server",
+                supportsStaticESM: true
             },
-            sourceType: 'module',
-            sourceMaps: 'inline',
+            sourceType: "module",
+            sourceMaps: "inline"
             // plugins: [
             //     ["@babel/plugin-proposal-decorators", {decoratorsBeforeExport: true}],
             //     ["@babel/plugin-proposal-class-properties"],
@@ -80,11 +80,11 @@ describe("plugin-web-modules", function () {
                 "lib/render.js",
                 "lib/template-factory.js",
                 "lib/template-instance.js",
-                "lib/template.js",
+                "lib/template.js"
             ]),
             "main": "lit-html.js",
             "name": "lit-html",
             "origin": join(fixtureDir, "node_modules", "lit-html")
         });
     });
-})
+});

@@ -12,32 +12,65 @@ const testConfig = configure({config: `${fixtureDir}/server.config.js`});
 const httpsAgentOptions = {
     ca: fs.readFileSync(`cert/rootCA.pem`),
     key: fs.readFileSync(`cert/server.key`),
-    cert: fs.readFileSync(`cert/server.crt`),
+    cert: fs.readFileSync(`cert/server.crt`)
 };
 
 async function testServer(options = {}) {
 
     const config = merge(testConfig, options);
-    const {server, watcher} = await startServer(config);
-    const baseURL = `https://${config.server.host}:${config.server.port}`;
+    const {server, watcher, address} = await startServer(config);
     const agent = new https.Agent(httpsAgentOptions);
     return {
         config,
         server,
         watcher,
-        baseURL,
+        address,
         fetch(pathname, options = {}) {
             options.agent = agent;
-            return fetch(baseURL + pathname, options);
+            return fetch(address + pathname, options);
         }
-    }
+    };
 }
 
+const {Readable, Writable} = require("stream");
+
 module.exports = {
+
     fixtureDir,
     testConfig,
     testServer,
-}
+
+    mockRequest(url = "/", {method = "GET", type = "json", headers = {}, payload = {}} = {}) {
+
+        const content = type === "json" ? JSON.stringify(payload) : qs.stringify(payload);
+
+        const request = Readable.from(method === "GET" || method === "OPTIONS" ? [] : [content]);
+
+        Object.assign(request, {
+            method,
+            mode: "cors",
+            cache: "no-cache",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": type === "json" ? "application/json" : "application/x-www-form-urlencoded",
+                ...headers
+            },
+            redirect: "follow",
+            referrerPolicy: "no-referrer"
+        });
+        return request;
+    },
+
+    mockResponse(options = {}) {
+        const response = new Writable();
+        response._write = jest.fn().mockImplementation(function (chunk, encoding, done) {
+            response.data.push(chunk.toString());
+            done();
+        });
+        response.end = jest.spyOn(response, "end");
+        return response;
+    }
+};
 
 
 

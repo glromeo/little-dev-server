@@ -1,4 +1,4 @@
-const {Suite} = require('benchmark');
+const {Suite} = require("benchmark");
 
 const {posix} = require("path");
 
@@ -59,21 +59,21 @@ https://biglobe.ne.jp/nulla/nunc/purus/phasellus/in/felis/donec.html?scelerisque
 http://accuweather.com/in/hac/habitasse.json?montes=orci&nascetur=luctus&ridiculus=et&mus=ultrices&vivamus=posuere&vestibulum=cubilia&sagittis=curae&sapien=duis&cum=faucibus&sociis=accumsan&natoque=odio&penatibus=curabitur&et=convallis&magnis=duis&dis=consequat&parturient=dui&montes=nec&nascetur=nisi&ridiculus=volutpat&mus=eleifend&etiam=donec&vel=ut&augue=dolor&vestibulum=morbi&rutrum=vel&rutrum=lectus&neque=in&aenean=quam&auctor=fringilla&gravida=rhoncus&sem=mauris&praesent=enim&id=leo&massa=rhoncus&id=sed&nisl=vestibulum&venenatis=sit&lacinia=amet&aenean=cursus&sit=id&amet=turpis&justo=integer&morbi=aliquet&ut=massa&odio=id&cras=lobortis&mi=convallis&pede=tortor&malesuada=risus&in=dapibus&imperdiet=augue&et=vel&commodo=accumsan&vulputate=tellus&justo=nisi&in=eu&blandit=orci&ultrices=mauris&enim=lacinia&lorem=sapien&ipsum=quis&dolor=libero&sit=nullam&amet=sit&consectetuer=amet&adipiscing=turpis&elit=elementum&proin=ligula&interdum=vehicula&mauris=consequat&non=morbi&ligula=a&pellentesque=ipsum&ultrices=integer
 http://upenn.edu/et.xml?sit=vivamus&amet=metus&justo=arcu&morbi=adipiscing&ut=molestie&odio=hendrerit&cras=at&mi=vulputate&pede=vitae&malesuada=nisl&in=aenean&imperdiet=lectus&et=pellentesque&commodo=eget&vulputate=nunc&justo=donec&in=quis&blandit=orci&ultrices=eget&enim=orci&lorem=vehicula&ipsum=condimentum&dolor=curabitur&sit=in&amet=libero&consectetuer=ut&adipiscing=massa&elit=volutpat&proin=convallis&interdum=morbi&mauris=odio&non=odio&ligula=elementum&pellentesque=eu&ultrices=interdum&phasellus=eu&id=tincidunt&sapien=in&in=leo&sapien=maecenas&iaculis=pulvinar&congue=lobortis&vivamus=est&metus=phasellus&arcu=sit&adipiscing=amet&molestie=erat&hendrerit=nulla&at=tempus&vulputate=vivamus&vitae=in&nisl=felis&aenean=eu&lectus=sapien&pellentesque=cursus&eget=vestibulum&nunc=proin&donec=eu&quis=mi&orci=nulla&eget=ac&orci=enim&vehicula=in&condimentum=tempor&curabitur=turpis&in=nec&libero=euismod&ut=scelerisque&massa=quam&volutpat=turpis&convallis=adipiscing&morbi=lorem&odio=vitae&odio=mattis&elementum=nibh&eu=ligula&interdum=nec&eu=sem&tincidunt=duis&in=aliquam&leo=convallis&maecenas=nunc&pulvinar=proin&lobortis=at
 http://disqus.com/eget/tempus.aspx?consequat=nibh&dui=in&nec=hac&nisi=habitasse&volutpat=platea&eleifend=dictumst&donec=aliquam&ut=augue&dolor=quam&morbi=sollicitudin    
-`.split('\n');
+`.split("\n");
 
 const re = /(.[^.]+$)?/;
 
 let x = false;
 
 new Suite()
-    .add('charat', function () {
+    .add("charat", function () {
         urls.forEach(str => {
             for (let i = 0; i < str.length; i++) {
                 x &= str.charAt(0) !== " ";
             }
         });
     })
-    .add('charcode', function () {
+    .add("charcode", function () {
         urls.forEach(str => {
             for (let i = 0; i < str.length; i++) {
                 x &= !str.startsWith(" ");
@@ -101,12 +101,12 @@ new Suite()
     //         });
     //     });
     // })
-    .on('cycle', function (event) {
+    .on("cycle", function (event) {
         console.log(String(event.target));
     })
-    .on('complete', function () {
-        console.log('Fastest is ' + this.filter('fastest').map('name'));
+    .on("complete", function () {
+        console.log("Fastest is " + this.filter("fastest").map("name"));
     })
-    .run({'async': true});
+    .run({"async": true});
 
 console.log(x);

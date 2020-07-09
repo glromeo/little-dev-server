@@ -35,7 +35,7 @@ describe("babel transformer integration tests", function () {
         const expected = expect(js);
         expected.toContain("import parser from '/web_modules/graphql/language/parser';");
         expected.toContain("var src = gql;\n\nexport default src;");
-    })
+    });
 
     it("graphql parser.js has a default export", async function () {
 
@@ -45,7 +45,7 @@ describe("babel transformer integration tests", function () {
         });
 
         expect(js).toContain("import { isCollection, forEach, getAsyncIterator, $$asyncIterator, isAsyncIterable } from '/web_modules/iterall';\n");
-    })
+    });
 
     it("can resolve lit-element", async function () {
 
@@ -56,7 +56,7 @@ describe("babel transformer integration tests", function () {
 
         const expected = expect(js);
         expect(js).toContain("import { customElement, html, LitElement } from \"/web_modules/lit-element/lit-element.js\";");
-    })
+    });
 
     it("can resolve scss", async function () {
 
@@ -67,6 +67,6 @@ describe("babel transformer integration tests", function () {
 
         const expected = expect(js);
         expect(js).toContain("import style from \"/src/w3.scss?type=module\";");
-    })
+    });
 
-})
+});
