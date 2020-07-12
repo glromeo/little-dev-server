@@ -63,10 +63,15 @@ module.exports = {
 
     mockResponse(options = {}) {
         const response = new Writable();
+        const headers = new Map();
         response._write = jest.fn().mockImplementation(function (chunk, encoding, done) {
             response.data.push(chunk.toString());
             done();
         });
+        response.getHeader = jest.fn().mockImplementation((name) => headers.get(name));
+        response.hasHeader = jest.fn().mockImplementation((name) => headers.has(name));
+        response.removeHeader = jest.fn().mockImplementation((name) => headers.delete(name));
+        response.setHeader = jest.fn().mockImplementation((name, value) => headers.set(name, value));
         response.end = jest.spyOn(response, "end");
         return response;
     }
