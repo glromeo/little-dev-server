@@ -16,3 +16,7 @@ for (const c of f()) {
 for (const c of g()) {
     console.log(c);
 }
+
+for (const m of require("../benchmark")) {
+    console.log(m);
+}
