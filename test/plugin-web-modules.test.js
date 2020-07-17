@@ -8,8 +8,8 @@ jest.mock("fs", () => {
     return ufs;
 });
 
-const {configure} = require("../lib/configuration.js");
-const {useWebModulesPlugin} = require("../lib/utility/web-modules-plugin.js");
+const {configure} = require("../lib/config.js");
+const {useWebModulesPlugin} = require("../lib/util/web-modules-plugin.js");
 
 describe("plugin-web-modules", function () {
 

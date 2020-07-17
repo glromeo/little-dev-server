@@ -18,7 +18,8 @@
     "graphql": "^14.5.4",
     "graphql-tag": "^2.10.1",
     "lit-element": "^2.3.1",
-    "lit-html": "^1.2.1"
+    "lit-html": "^1.2.1",
+    "w3-css": "^4.1.0"
   },
   "devServer": {
     "testOption": "testValue"

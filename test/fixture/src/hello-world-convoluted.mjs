@@ -1,9 +1,9 @@
 "use strict";
 import {format, parse} from "date-fns";
 import {customElement, html, LitElement, query} from "lit-element";
-import {unsafeHTML} from "lit-html/directives/unsafe-html";
 import {css} from "lit-element/lit-element.js";
 import {html as lithtml, render} from "lit-html";
+import {unsafeHTML} from "lit-html/directives/unsafe-html";
 
 @customElement("hello-world")
 export class HelloWorld extends LitElement {

@@ -1,14 +1,12 @@
-const {testServer} = require("./test.setup.js");
-const path = require("path");
-
-const {writeFileSync, statSync} = require("fs");
-
-return;
-
-jest.mock("etag");
-require("etag").mockReturnValue("test-etag");
-
 describe("pipeline test", function () {
+
+    const {testServer} = require("./.setup.js");
+    const path = require("path");
+
+    const {writeFileSync, statSync} = require("fs");
+
+    jest.mock("etag");
+    require("etag").mockReturnValue("test-etag");
 
     jest.setTimeout(30 * 1000);
 

@@ -1,10 +1,10 @@
-const fs = require("fs");
-const path = require("path");
-const {toPosix} = require("../lib/utility/quick-parse-url.js");
-const {configure} = require("../lib/configuration.js");
-const {useWebModules} = require("../lib/utility/web-modules.js");
-
 describe("web modules", function () {
+    
+    const fs = require("fs");
+    const path = require("path");
+    const {toPosix} = require("../lib/util/quick-parse-url.js");
+    const {configure} = require("../lib/config.js");
+    const {useWebModules} = require("../lib/util/web-modules.js");
 
     const fixturedir = path.join(__dirname, "fixture");
     const webModulesDir = path.join(fixturedir, "web_modules");

@@ -9,8 +9,7 @@
     "/cert/server.key",
     "/cert/server.crt",
     "/lib",
-    "/resources",
-    "/routing.config.js"
+    "/resources"
   ],
   "bin": {
     "little-dev-server": "./lib/cli.js"
@@ -39,6 +38,7 @@
     "@rollup/plugin-node-resolve": "^8.0.1",
     "@types/yargs": "^15.0.5",
     "chokidar": "^3.0.2",
+    "cors": "^2.8.5",
     "etag": "^1.8.1",
     "fast-decode-uri-component": "^1.0.1",
     "fast-url-parser": "^1.1.3",

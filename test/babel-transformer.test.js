@@ -1,8 +1,6 @@
-const {testServer} = require("./test.setup.js");
-
-return;
-
 describe("babel transformer integration tests", function () {
+
+    const {testServer} = require("./.setup.js");
 
     let config, server, fetch;
 
