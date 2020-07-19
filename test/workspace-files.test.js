@@ -10,22 +10,22 @@ describe("workspace files", function () {
     describe("unit tests", function () {
 
         it("can serve a json file", async function () {
-            const {content, headers} = readWorkspaceFile("/package.json");
+            const {content, headers} = await readWorkspaceFile("/package.json");
             expect(JSON.parse(content).name).toBe("@test/fixture");
             expect(headers["content-type"]).toBe("application/json; charset=UTF-8");
-            expect(headers["content-length"]).toBe(524);
-            expect(headers["last-modified"]).toMatchObject(new Date("2020-07-09T13:47:47.378Z"));
+            expect(headers["content-length"]).toBe(548);
+            expect(headers["last-modified"]).toMatch("Sun, 19 Jul 2020 08:20:28 GMT");
         });
 
         it("redirects missing /favicon.ico to /resources/javascript.png", async function () {
-            expect(() => readWorkspaceFile("/favicon.ico")).toThrow({
+            await expect(readWorkspaceFile("/favicon.ico")).rejects.toMatchObject({
                 code: HttpStatus.PERMANENT_REDIRECT,
                 headers: {"location": "/resources/javascript.png"}
             });
         });
 
         it("fails if it's a missing file", async function () {
-            expect(() => readWorkspaceFile("/missing.file")).toThrow({
+            await expect(readWorkspaceFile("/missing.file")).rejects.toMatchObject({
                 code: HttpStatus.NOT_FOUND,
                 message: `Error: ENOENT: no such file or directory, stat '${path.join(fixtureDir, "/missing.file")}'`
             });

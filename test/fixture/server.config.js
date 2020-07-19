@@ -22,6 +22,9 @@ module.exports = {
         ]
     },
     clean: true,
+    server: {
+        port: 8888
+    },
     customResolveOptions: {
         basedir: __dirname
     }
