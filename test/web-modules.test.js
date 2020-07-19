@@ -1,5 +1,5 @@
 describe("web modules", function () {
-    
+
     const fs = require("fs");
     const path = require("path");
     const {toPosix} = require("../lib/util/quick-parse-url.js");

@@ -1,9 +1,8 @@
-const fs = require("fs");
-const path = require("path");
-
-const {quickParseURL, nodeModuleBareUrl, isBare} = require("../lib/util/quick-parse-url.js");
-
 describe("quick parse URL", function () {
+
+    const fs = require("fs");
+    const path = require("path");
+    const {quickParseURL, nodeModuleBareUrl, isBare, splitModulePathname} = require("../lib/util/quick-parse-url.js");
 
     it("nodeModuleBareUrl", async function () {
         expect(nodeModuleBareUrl(`C:${path.sep}little-dev-server${path.sep}node_modules${path.sep}@babel${path.sep}core${path.sep}lib${path.sep}parse.js`)).toStrictEqual("@babel/core/lib/parse.js");
@@ -77,5 +76,16 @@ describe("quick parse URL", function () {
         expect(!isBare(".a")).toBe(false);
         expect(!isBare("..a")).toBe(false);
     });
+
+    it("split module", function () {
+        expect(splitModulePathname("@module/name/path/file.ext")).toMatchObject({
+            module: "@module/name",
+            filename: "path/file.ext"
+        })
+        expect(splitModulePathname("module/base/path/file.ext")).toMatchObject({
+            module: "module",
+            filename: "base/path/file.ext"
+        })
+    })
 
 });
