@@ -30,50 +30,56 @@ describe("pipeline test", function () {
 
         const {mtime} = statSync(path.resolve(__dirname, "fixture/public/hello-world.txt"));
 
-        return fetch(`/public/hello-world.txt?ignored`).then(response => {
-            expect(response.ok).toBe(true);
-            expect(response.status).toBe(200);
-            expect(response.statusText).toBe("OK");
-            expect(response.headers.raw()).toMatchObject({
-                "etag": ["test-etag"],
-                "content-length": ["12"],
-                "content-type": ["text/plain; charset=UTF-8"],
-                "last-modified": [mtime.toUTCString()]
-            });
-            expect(response.headers.get("connection")).toMatch("close");
-            expect(require("etag")).toHaveBeenCalledWith(
-                expect.stringMatching(
-                    "public/hello-world.txt"
-                ),
-                undefined
-            );
-            return response.text();
-        }).then(text => {
-            expect(text).toEqual("Hello World!");
+        const response = await fetch(`/public/hello-world.txt?ignored`);
+        expect(response.ok).toBe(true);
+        expect(response.status).toBe(200);
+        expect(response.statusText).toBe("OK");
+        expect(response.headers.raw()).toMatchObject({
+            "etag": ["test-etag"],
+            "content-length": ["12"],
+            "content-type": ["text/plain; charset=UTF-8"],
+            "last-modified": [mtime.toUTCString()]
         });
+        expect(response.headers.get("connection")).toMatch("close");
+        expect(require("etag")).toHaveBeenCalledWith(
+            expect.stringMatching(
+                "public/hello-world.txt"
+            ),
+            undefined
+        );
+        const text = await response.text();
+        expect(text).toEqual("Hello World!");
     });
 
     it("if the file is missing returns 404", async function () {
 
-        return fetch(`/public/file-not-found`).then(response => {
-            expect(response.ok).toBe(false);
-            expect(response.status).toBe(404);
-            expect(response.statusText).toBe("Not Found");
-            expect(Array.from(response.headers.keys())).toStrictEqual(["connection", "date", "transfer-encoding"]);
-        });
+        const response = await fetch(`/public/file-not-found`);
+        expect(response.ok).toBe(false);
+        expect(response.status).toBe(404);
+        expect(response.statusText).toBe("Not Found");
+        expect([...response.headers.keys()]).toStrictEqual([
+            "access-control-allow-credentials",
+            "access-control-allow-origin",
+            "connection",
+            "date",
+            "transfer-encoding"
+        ]);
     });
 
     it("expect broken javascript file causes 500", async function () {
-
-        return fetch(`/src/broken.js`).then(response => {
-            expect(response.ok).toBe(false);
-            expect(response.status).toBe(500);
-            expect(response.statusText).toBe("Server Error");
-            expect(Array.from(response.headers.keys())).toStrictEqual(["connection", "date", "transfer-encoding"]);
-            return response.text();
-        }).then(text => {
-            expect(text).toContain("Unexpected token (2:0)");
-        });
+        const response = await fetch(`/src/broken.js`);
+        expect(response.ok).toBe(false);
+        expect(response.status).toBe(500);
+        expect(response.statusText).toBe("Internal Server Error");
+        expect([...response.headers.keys()]).toStrictEqual([
+            "access-control-allow-credentials",
+            "access-control-allow-origin",
+            "connection",
+            "date",
+            "transfer-encoding"
+        ]);
+        const text = await response.text();
+        expect(text).toContain("Unexpected token (2:0)");
     });
 
     it("can use weak etag", async function () {
@@ -168,4 +174,5 @@ describe("pipeline test", function () {
         });
     });
 
-});
+})
+;

@@ -161,11 +161,11 @@ describe("web modules", function () {
             "main": "src/index.js",
             "name": "graphql-tag",
             "stats": {
-                "size": 19377
+                "size": 12881
             }
         });
         expect(fs.readFileSync(path.resolve(fixturedir, "web_modules/graphql-tag/src/index.js"), "UTF-8")).toMatch(
-            `import parser from '/web_modules/graphql/language/parser';`
+            `import e from '/web_modules/graphql/language/parser';`
         );
         // the resolveImport should prefer mjs over js
         expect(await resolveImport(fixturedir, "graphql/language/parser")).toMatch(
