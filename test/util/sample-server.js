@@ -1,23 +1,23 @@
 const http = require("http");
 
 const server = http.createServer((request, response) => {
-    response.setHeader("Last-Modified", new Date());
+    response.setHeader("Last-Modified", new Date().toUTCString());
     response.writeHead(200, {
         "Content-Type": "application/json",
         "X-Powered-By": "bacon"
     });
-    response.end();
+    response.end({
+        data: 111000110010
+    });
 }).listen(8080);
 
 http.get("http://localhost:8080", (resp) => {
     let data = "";
-    // A chunk of data has been recieved.
     resp.on("data", (chunk) => {
         data += chunk;
     });
-    // The whole response has been received. Print out the result.
     resp.on("end", () => {
-        console.log(JSON.parse(data).explanation);
+        console.log(JSON.parse(data));
     });
 }).on("error", (err) => {
     console.log("Error: " + err.message);

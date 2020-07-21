@@ -14,7 +14,7 @@ describe("pipeline test", function () {
 
     it("can serve a static file with headers", async function () {
 
-        const {mtime} = statSync(resolve("public/hello-world.txt"));
+        const {size, mtime} = statSync(resolve("public/hello-world.txt"));
 
         const response = await fetch(`/public/hello-world.txt?ignored`);
         expect(response.ok).toBe(true);
@@ -22,13 +22,13 @@ describe("pipeline test", function () {
         expect(response.statusText).toBe("OK");
         expect(response.headers.raw()).toMatchObject({
             "etag": ["test-etag"],
-            "content-length": ["12"],
+            "content-length": [`${size}`],
             "content-type": ["text/plain; charset=UTF-8"],
             "last-modified": [mtime.toUTCString()]
         });
         expect(response.headers.get("connection")).toMatch("close");
         expect(etag).toHaveBeenCalledWith(
-            expect.stringMatching("/public/hello-world.txt 12 Tue, 14 Jul 2020 09:47:23 GMT"),
+            expect.stringMatching(`/public/hello-world.txt ${size} ${mtime.toUTCString()}`),
             config.etag
         );
         const text = await response.text();

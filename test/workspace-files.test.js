@@ -4,6 +4,7 @@ describe("workspace files", function () {
     const {server: {start, stop}, fetch, rootDir} = useFixture();
 
     const path = require("path");
+    const fs = require("fs");
     const HttpStatus = require("http-status-codes");
 
     const {useWorkspaceFiles} = require("../lib/pipeline/workspace-files.js");
@@ -11,12 +12,14 @@ describe("workspace files", function () {
 
     describe("unit tests", function () {
 
+        const {size, mtime} = fs.statSync(`${rootDir}/package.json`);
+
         it("can serve a json file", async function () {
             const {content, headers} = await readWorkspaceFile("/package.json");
             expect(JSON.parse(content).name).toBe("@test/fixture");
             expect(headers["content-type"]).toBe("application/json; charset=UTF-8");
-            expect(headers["content-length"]).toBeCloseTo(560, -2);
-            expect(headers["last-modified"]).toMatch("Tue, 21 Jul 2020 11:34:54 GMT");
+            expect(headers["content-length"]).toBe(size);
+            expect(headers["last-modified"]).toMatch(mtime.toUTCString());
         });
 
         it("redirects missing /favicon.ico to /resources/javascript.png", async function () {
