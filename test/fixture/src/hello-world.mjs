@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import {customElement, html, LitElement} from "lit-element";
 

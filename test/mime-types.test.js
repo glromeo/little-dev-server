@@ -1,6 +1,6 @@
-const mime = require("../lib/utility/mime-types");
-
 describe("mime types", function () {
+
+    const mime = require("../lib/util/mime-types");
 
     it("lookup by plain ext without .", function () {
         expect(mime.contentType("js")).toStrictEqual("application/javascript; charset=UTF-8");

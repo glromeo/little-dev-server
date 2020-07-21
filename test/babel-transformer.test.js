@@ -1,19 +1,10 @@
-const {testServer} = require("./test-configuration.js");
+describe("babel transformer", function () {
 
-describe("babel transformer integration tests", function () {
+    const {useFixture} = require("./fixture/index.js");
+    const {server:{start, stop}, fetch} = useFixture();
 
-    let config, server, fetch;
-
-    beforeAll(async function () {
-        const context = await testServer({port: 3050});
-        config = context.config;
-        server = context.server;
-        fetch = context.fetch;
-    });
-
-    afterAll(async function () {
-        await server.shutdown();
-    });
+    beforeAll(start);
+    afterAll(stop);
 
     it("can resolve bare import graphql-tag", async function () {
 
@@ -33,9 +24,9 @@ describe("babel transformer integration tests", function () {
         });
 
         const expected = expect(js);
-        expected.toContain("import parser from '/web_modules/graphql/language/parser';");
-        expected.toContain("var src = gql;\n\nexport default src;");
-    })
+        expected.toContain(`import e from"/web_modules/graphql/language/parser";`);
+        expected.toContain("var s=c;export default s;");
+    });
 
     it("graphql parser.js has a default export", async function () {
 
@@ -44,8 +35,8 @@ describe("babel transformer integration tests", function () {
             return response.text();
         });
 
-        expect(js).toContain("import { isCollection, forEach, getAsyncIterator, $$asyncIterator, isAsyncIterable } from '/web_modules/iterall';\n");
-    })
+        expect(js).toContain(`import{isCollection as e,forEach as n,getAsyncIterator as t,$$asyncIterator as r,isAsyncIterable as i}from"/web_modules/iterall";`);
+    });
 
     it("can resolve lit-element", async function () {
 
@@ -56,7 +47,7 @@ describe("babel transformer integration tests", function () {
 
         const expected = expect(js);
         expect(js).toContain("import { customElement, html, LitElement } from \"/web_modules/lit-element/lit-element.js\";");
-    })
+    });
 
     it("can resolve scss", async function () {
 
@@ -67,6 +58,6 @@ describe("babel transformer integration tests", function () {
 
         const expected = expect(js);
         expect(js).toContain("import style from \"/src/w3.scss?type=module\";");
-    })
+    });
 
-})
+});

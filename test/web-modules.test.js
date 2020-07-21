@@ -1,10 +1,10 @@
-const fs = require("fs");
-const path = require("path");
-const {toPosix} = require("../lib/utility/quick-parse-url.js");
-const {configure} = require("../lib/configuration.js");
-const {useWebModules} = require("../lib/utility/web-modules.js");
-
 describe("web modules", function () {
+
+    const fs = require("fs");
+    const path = require("path");
+    const {toPosix} = require("../lib/util/quick-parse-url.js");
+    const {configure} = require("../lib/config.js");
+    const {useWebModules} = require("../lib/util/web-modules.js");
 
     const fixturedir = path.join(__dirname, "fixture");
     const webModulesDir = path.join(fixturedir, "web_modules");
@@ -18,7 +18,7 @@ describe("web modules", function () {
 
     beforeEach(function () {
         modules.init();
-    })
+    });
 
     it("if config.clean is set the web_modules directory is wiped out at initialization", function () {
 
@@ -99,7 +99,7 @@ describe("web modules", function () {
             "/alpha/beta/delta.sigma?type=module&q=e"
         );
 
-        // there's src in fixture (root dir) yet it's not a package
+        // there's src in fixture (root rootDir) yet it's not a package
         await expect(resolveImport(fixturedir, "src")).rejects.toMatchObject({
             message: expect.stringContaining("Cannot find module 'src/package.json'")
         });
@@ -108,7 +108,7 @@ describe("web modules", function () {
             "/src/index.js"
         );
 
-        // absolute files are resolved from root dir
+        // absolute files are resolved from root rootDir
         await expect(resolveImport(basedir, "/server.config.js")).resolves.toBe(
             "/server.config.js"
         );
@@ -161,12 +161,12 @@ describe("web modules", function () {
             "main": "src/index.js",
             "name": "graphql-tag",
             "stats": {
-                "size": 19377
+                "size": 12881
             }
         });
         expect(fs.readFileSync(path.resolve(fixturedir, "web_modules/graphql-tag/src/index.js"), "UTF-8")).toMatch(
-            `import parser from '/web_modules/graphql/language/parser';`
-        )
+            `import e from"/web_modules/graphql/language/parser";`
+        );
         // the resolveImport should prefer mjs over js
         expect(await resolveImport(fixturedir, "graphql/language/parser")).toMatch(
             "/web_modules/graphql/language/parser.mjs"
@@ -183,7 +183,7 @@ describe("web modules", function () {
                 "lit-element.js",
                 "lib/updating-element.js",
                 "lib/decorators.js",
-                "lib/css-tag.js",
+                "lib/css-tag.js"
             ])
         });
 
@@ -192,9 +192,9 @@ describe("web modules", function () {
                 "lit-element.js",
                 "lib/updating-element.js",
                 "lib/decorators.js",
-                "lib/css-tag.js",
+                "lib/css-tag.js"
             ])
-        })
+        });
 
         await expect(rollupWebModule("lit-html", "lit-html.js")).resolves.toMatchObject({
             "filename": "lit-html.js",
@@ -235,7 +235,7 @@ describe("web modules", function () {
                 "lib/template-instance.js",
                 "lib/template.js"
             ])
-        })
+        });
 
         await expect(webPkg.resolve("lib/render.js")).resolves.toMatch("lit-html.js");
     });
@@ -267,5 +267,5 @@ describe("web modules", function () {
                 "directives/unsafe-html.js"
             ]
         });
-    })
-})
+    });
+});

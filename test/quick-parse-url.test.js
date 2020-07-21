@@ -1,9 +1,8 @@
-const fs = require("fs");
-const path = require("path");
-
-const {quickParseURL, nodeModuleBareUrl, isBare} = require("../lib/utility/quick-parse-url.js");
-
 describe("quick parse URL", function () {
+
+    const fs = require("fs");
+    const path = require("path");
+    const {quickParseURL, nodeModuleBareUrl, isBare, parsePathname} = require("../lib/util/quick-parse-url.js");
 
     it("nodeModuleBareUrl", async function () {
         expect(nodeModuleBareUrl(`C:${path.sep}little-dev-server${path.sep}node_modules${path.sep}@babel${path.sep}core${path.sep}lib${path.sep}parse.js`)).toStrictEqual("@babel/core/lib/parse.js");
@@ -33,7 +32,10 @@ describe("quick parse URL", function () {
         });
         expect(stripUndefined(quickParseURL("name"))).toStrictEqual({module: "name"});
         expect(stripUndefined(quickParseURL(".name.ext"))).toStrictEqual({pathname: ".name.ext"});
-        expect(stripUndefined(quickParseURL("name.js?query=q"))).toStrictEqual({pathname: "name.js", search: "query=q"});
+        expect(stripUndefined(quickParseURL("name.js?query=q"))).toStrictEqual({
+            pathname: "name.js",
+            search: "query=q"
+        });
         expect(stripUndefined(quickParseURL("./name"))).toStrictEqual({pathname: "./name"});
         expect(stripUndefined(quickParseURL("../a/b/name.ext?query=q&x=y"))).toStrictEqual({
             pathname: "../a/b/name.ext",
@@ -59,7 +61,7 @@ describe("quick parse URL", function () {
         expect(stripUndefined(quickParseURL("parent/name"))).toStrictEqual({module: "parent", pathname: "name"});
         expect(stripUndefined(quickParseURL("@parent/name"))).toStrictEqual({module: "@parent/name"});
         expect(stripUndefined(quickParseURL("@parent/module/name"))).toStrictEqual({
-            module: "@parent/module", pathname: "name",
+            module: "@parent/module", pathname: "name"
         });
         expect(stripUndefined(quickParseURL("@parent/module/name.scss?type=module"))).toStrictEqual({
             module: "@parent/module", pathname: "name.scss", search: "type=module"
@@ -73,6 +75,17 @@ describe("quick parse URL", function () {
         expect(!isBare("../")).toBe(true);
         expect(!isBare(".a")).toBe(false);
         expect(!isBare("..a")).toBe(false);
+    });
+
+    it("split module", function () {
+        expect(parsePathname("@module/name/path/file.ext")).toMatchObject({
+            module: "@module/name",
+            filename: "path/file.ext"
+        })
+        expect(parsePathname("module/base/path/file.ext")).toMatchObject({
+            module: "module",
+            filename: "base/path/file.ext"
+        })
     })
 
-})
+});
