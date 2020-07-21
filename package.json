@@ -85,7 +85,7 @@
     "demo": "node lib/cli.js --root ./demo",
     "prof": "node --prof lib/cli.js --root ./demo",
     "inspect": "node --inspect lib/cli.js --root ./demo",
-    "test": "jest --coverage",
+    "test": "jest --coverage --forceExit",
     "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls"
   }
 }
