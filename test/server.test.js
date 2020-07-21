@@ -253,6 +253,7 @@ describe("server", function () {
         let server, address, agent;
 
         beforeAll(async function () {
+            config.server.port = 9090;
             const instance = await startServer(config);
             server = instance.server;
             address = instance.address;
