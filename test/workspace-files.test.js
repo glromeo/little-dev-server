@@ -15,8 +15,8 @@ describe("workspace files", function () {
             const {content, headers} = await readWorkspaceFile("/package.json");
             expect(JSON.parse(content).name).toBe("@test/fixture");
             expect(headers["content-type"]).toBe("application/json; charset=UTF-8");
-            expect(headers["content-length"]).toBe(575);
-            expect(headers["last-modified"]).toMatch("Fri, 17 Jul 2020 12:26:44 GMT");
+            expect(headers["content-length"]).toBeCloseTo(560, -2);
+            expect(headers["last-modified"]).toMatch("Tue, 21 Jul 2020 11:34:54 GMT");
         });
 
         it("redirects missing /favicon.ico to /resources/javascript.png", async function () {
