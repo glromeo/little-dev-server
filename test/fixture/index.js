@@ -1,5 +1,7 @@
 module.exports.useFixture = function (options = {config: `${__dirname}/server.config.js`}) {
 
+    const log = require("tiny-node-logger");
+
     const {configure} = require("../../lib/config.js");
     const {createWatcher} = require("../../lib/watcher.js");
     const {startServer} = require("../../lib/server.js");
@@ -22,6 +24,7 @@ module.exports.useFixture = function (options = {config: `${__dirname}/server.co
         config,
         server: {
             async start() {
+                log.info("starting server on port:", config.server.port);
                 const {server, address} = await startServer(config, {watcher});
                 fixture.server.instance = server;
                 fixture.server.address = address;
@@ -31,7 +34,9 @@ module.exports.useFixture = function (options = {config: `${__dirname}/server.co
                 if (!fixture.server.instance) {
                     throw "server has not been started yet";
                 } else {
-                    return await fixture.server.instance.shutdown();
+                    const stopped = fixture.server.instance.shutdown();
+                    log.info("stopping server...");
+                    return await stopped;
                 }
             }
         },
