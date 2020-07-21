@@ -99,7 +99,7 @@ describe("web modules", function () {
             "/alpha/beta/delta.sigma?type=module&q=e"
         );
 
-        // there's src in fixture (root dir) yet it's not a package
+        // there's src in fixture (root rootDir) yet it's not a package
         await expect(resolveImport(fixturedir, "src")).rejects.toMatchObject({
             message: expect.stringContaining("Cannot find module 'src/package.json'")
         });
@@ -108,7 +108,7 @@ describe("web modules", function () {
             "/src/index.js"
         );
 
-        // absolute files are resolved from root dir
+        // absolute files are resolved from root rootDir
         await expect(resolveImport(basedir, "/server.config.js")).resolves.toBe(
             "/server.config.js"
         );
@@ -165,7 +165,7 @@ describe("web modules", function () {
             }
         });
         expect(fs.readFileSync(path.resolve(fixturedir, "web_modules/graphql-tag/src/index.js"), "UTF-8")).toMatch(
-            `import e from '/web_modules/graphql/language/parser';`
+            `import e from"/web_modules/graphql/language/parser";`
         );
         // the resolveImport should prefer mjs over js
         expect(await resolveImport(fixturedir, "graphql/language/parser")).toMatch(

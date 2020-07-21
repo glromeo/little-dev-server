@@ -1,17 +1,17 @@
-const {join} = require("path");
-
-jest.mock("fs", () => {
-    const {vol} = require("memfs");
-    vol.fromJSON({}, "/web_modules");
-    const {ufs} = require("unionfs");
-    ufs.use(jest.requireActual("fs")).use(vol);
-    return ufs;
-});
-
-const {configure} = require("../lib/config.js");
-const {useWebModulesPlugin} = require("../lib/util/web-modules-plugin.js");
-
 describe("plugin-web-modules", function () {
+
+    const {join} = require("path");
+
+    jest.mock("fs", () => {
+        const {vol} = require("memfs");
+        vol.fromJSON({}, "/web_modules");
+        const {ufs} = require("unionfs");
+        ufs.use(jest.requireActual("fs")).use(vol);
+        return ufs;
+    });
+
+    const {configure} = require("../lib/config.js");
+    const {useWebModulesPlugin} = require("../lib/util/web-modules-plugin.js");
 
     const fixtureDir = `${process.cwd()}/test/fixture`;
     const config = configure({

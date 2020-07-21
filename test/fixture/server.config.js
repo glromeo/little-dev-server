@@ -4,8 +4,8 @@ module.exports = {
     nodeModules: [resolve(__dirname, "node_modules"), resolve(__dirname, "../../demo/node_modules")],
     webModules: resolve(__dirname, "web_modules"),
     mount: {
-        "/mount-example": [resolve(__dirname, "public/override")],
-        "/public": [resolve(__dirname, "public")]
+        "/mount-example": resolve(__dirname, "public/override"),
+        "/public": resolve(__dirname, "public")
     },
     babel: {
         plugins: [
@@ -21,11 +21,10 @@ module.exports = {
             }]
         ]
     },
+    cache: false,
     clean: true,
-    server: {
-        port: 8888
-    },
     customResolveOptions: {
         basedir: __dirname
-    }
+    },
+    logLevel: "info"
 };

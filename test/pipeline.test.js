@@ -1,34 +1,20 @@
 describe("pipeline test", function () {
 
-    const {testServer} = require("./.setup.js");
-    const path = require("path");
-
-    const {writeFileSync, statSync} = require("fs");
-
     jest.mock("etag");
-    require("etag").mockReturnValue("test-etag");
+    const etag = require("etag");
+    etag.mockReturnValue("test-etag");
 
-    jest.setTimeout(30 * 1000);
+    const {useFixture} = require("./fixture/index.js");
+    const {server:{start, stop}, fetch, resolve, config} = useFixture();
 
-    let config, server, watcher, fetch;
+    const {statSync} = require("fs");
 
-    beforeAll(async function () {
-        const test = await testServer({port: 3030});
-        config = test.config;
-        server = test.server;
-        watcher = test.watcher;
-        fetch = test.fetch;
-    });
-
-    afterAll(async function () {
-        await server.shutdown();
-    });
+    beforeAll(start);
+    afterAll(stop);
 
     it("can serve a static file with headers", async function () {
 
-        config.etag = undefined;
-
-        const {mtime} = statSync(path.resolve(__dirname, "fixture/public/hello-world.txt"));
+        const {mtime} = statSync(resolve("public/hello-world.txt"));
 
         const response = await fetch(`/public/hello-world.txt?ignored`);
         expect(response.ok).toBe(true);
@@ -41,18 +27,15 @@ describe("pipeline test", function () {
             "last-modified": [mtime.toUTCString()]
         });
         expect(response.headers.get("connection")).toMatch("close");
-        expect(require("etag")).toHaveBeenCalledWith(
-            expect.stringMatching(
-                "public/hello-world.txt"
-            ),
-            undefined
+        expect(etag).toHaveBeenCalledWith(
+            expect.stringMatching("/public/hello-world.txt 12 Tue, 14 Jul 2020 09:47:23 GMT"),
+            config.etag
         );
         const text = await response.text();
         expect(text).toEqual("Hello World!");
     });
 
     it("if the file is missing returns 404", async function () {
-
         const response = await fetch(`/public/file-not-found`);
         expect(response.ok).toBe(false);
         expect(response.status).toBe(404);
@@ -66,7 +49,7 @@ describe("pipeline test", function () {
         ]);
     });
 
-    it("expect broken javascript file causes 500", async function () {
+    it("expect a broken javascript file to cause 500", async function () {
         const response = await fetch(`/src/broken.js`);
         expect(response.ok).toBe(false);
         expect(response.status).toBe(500);
@@ -80,19 +63,6 @@ describe("pipeline test", function () {
         ]);
         const text = await response.text();
         expect(text).toContain("Unexpected token (2:0)");
-    });
-
-    it("can use weak etag", async function () {
-
-        config.etag = {
-            weak: true
-        };
-
-        return fetch(`/public/hello-world.txt`).then(response => {
-            expect(require("etag")).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
-                weak: true
-            }));
-        });
     });
 
     it("javascript files are transpiled by babel", async function () {
@@ -131,48 +101,10 @@ describe("pipeline test", function () {
     });
 
     it("mount example", async function () {
-
-        await fetch(`/mount-example/hello-world.txt`).then(response => {
-            expect(response.ok).toBe(true);
-            return response.text();
-        }).then(text => {
-            expect(text).toEqual("Bonjour Monde!");
-        });
-    });
-
-    it("cache functionality", async function () {
-
-        const tempFile = path.resolve(config.rootDir, "__temp_file__.scss");
-
-        writeFileSync(tempFile, `
-            .cache_functionality_test {
-                background-color: white;
-            }
-        `, "utf-8");
-
-        await fetch(`/__temp_file__.scss`).then(res => res.text()).then(text => {
-            expect(text).toContain(".cache_functionality_test");
-        });
-
-        const watched = watcher.getWatched();
-
-        expect(watched["."].length).toBe(1);
-
-        await new Promise(resolve => {
-
-            watcher.on("change", resolve);
-
-            writeFileSync(tempFile, `
-                .updated_class {
-                    background-color: red;
-                }
-            `, "utf-8");
-        });
-
-        await fetch(`/__temp_file__.scss`).then(res => res.text()).then(text => {
-            expect(text).toContain(".updated_class");
-        });
+        const response = await fetch(`/mount-example/hello-world.txt`);
+        expect(response.ok).toBe(true);
+        await expect(response.text()).resolves.toMatch("Bonjour Monde!");
     });
 
 })
-;
+

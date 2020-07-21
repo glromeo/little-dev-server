@@ -1,11 +1,13 @@
 describe("workspace files", function () {
 
-    const {useWorkspaceFiles} = require("../lib/pipeline/workspace-files.js");
+    const {useFixture} = require("./fixture/index.js");
+    const {server: {start, stop}, fetch, rootDir} = useFixture();
+
     const path = require("path");
     const HttpStatus = require("http-status-codes");
-    const {testServer, fixtureDir} = require("./.setup.js");
 
-    const {readWorkspaceFile} = useWorkspaceFiles({rootDir: fixtureDir});
+    const {useWorkspaceFiles} = require("../lib/pipeline/workspace-files.js");
+    const {readWorkspaceFile} = useWorkspaceFiles({rootDir});
 
     describe("unit tests", function () {
 
@@ -13,8 +15,8 @@ describe("workspace files", function () {
             const {content, headers} = await readWorkspaceFile("/package.json");
             expect(JSON.parse(content).name).toBe("@test/fixture");
             expect(headers["content-type"]).toBe("application/json; charset=UTF-8");
-            expect(headers["content-length"]).toBe(548);
-            expect(headers["last-modified"]).toMatch("Sun, 19 Jul 2020 08:20:28 GMT");
+            expect(headers["content-length"]).toBe(575);
+            expect(headers["last-modified"]).toMatch("Fri, 17 Jul 2020 12:26:44 GMT");
         });
 
         it("redirects missing /favicon.ico to /resources/javascript.png", async function () {
@@ -27,24 +29,15 @@ describe("workspace files", function () {
         it("fails if it's a missing file", async function () {
             await expect(readWorkspaceFile("/missing.file")).rejects.toMatchObject({
                 code: HttpStatus.NOT_FOUND,
-                message: `Error: ENOENT: no such file or directory, stat '${path.join(fixtureDir, "/missing.file")}'`
+                message: `Error: ENOENT: no such file or directory, stat '${path.join(rootDir, "/missing.file")}'`
             });
         });
     });
 
     describe("integration tests", function () {
 
-        let server, fetch;
-
-        beforeAll(async function () {
-            const setup = await testServer({rootDir: fixtureDir});
-            server = setup.server;
-            fetch = setup.fetch;
-        });
-
-        afterAll(async function () {
-            await server.shutdown();
-        });
+        beforeAll(start);
+        afterAll(stop);
 
         it("can serve package.json", async function () {
             const response = await fetch("/package.json");

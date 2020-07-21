@@ -2,12 +2,9 @@ describe("configuration", function () {
 
     const {configure} = require("../lib/config.js");
 
-    const {fixtureDir} = require("./.setup.js");
+    const {baseDir, rootDir} = require("./fixture/index.js").useFixture();
     const {resolve, join} = require("path");
     const fs = require("fs");
-
-    const baseDir = process.cwd();
-    const rootDir = fixtureDir;
 
     it("can load config from a file", function () {
 
@@ -59,7 +56,7 @@ describe("configuration", function () {
 
     it("config.rootDir must be a directory", async function () {
         expect(() => configure({rootDir: __filename})).toThrowError("ENODIR: not a valid root directory");
-        expect(() => configure({rootDir: join(fixtureDir, "non_dir")})).toThrowError("ENOENT: no such file or directory");
+        expect(() => configure({rootDir: join(rootDir, "non_dir")})).toThrowError("ENOENT: no such file or directory");
     });
 
     it("check default base & root dir", function () {

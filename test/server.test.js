@@ -10,7 +10,7 @@ describe("server", function () {
     const {contentText} = require("../lib/util/content-utils.js");
     const fetch = require("node-fetch");
 
-    const logLevel = "debug";
+    const logLevel = "info";
 
     jest.mock("../lib/request-handler.js", function () {
         return {
@@ -48,6 +48,7 @@ describe("server", function () {
         let module, server, address;
 
         beforeAll(async function () {
+            config.server.port = 8080;
             const instance = await startServer(config);
             module = instance.module;
             server = instance.server;
@@ -97,6 +98,7 @@ describe("server", function () {
         let module, server, address, agent;
 
         beforeAll(async function () {
+            config.server.port = 8443;
             const instance = await startServer(config);
             module = instance.module;
             server = instance.server;
@@ -150,6 +152,7 @@ describe("server", function () {
         let module, server, address, agent;
 
         beforeAll(async function () {
+            config.server.port = 9443;
             const instance = await startServer(config);
             module = instance.module;
             server = instance.server;
