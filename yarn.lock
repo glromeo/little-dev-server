@@ -4462,10 +4462,10 @@ throat@^5.0.0:
   resolved "https://registry.yarnpkg.com/throat/-/throat-5.0.0.tgz#c5199235803aad18754a667d659b5e72ce16764b"
   integrity sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==
 
-tiny-node-logger@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/tiny-node-logger/-/tiny-node-logger-1.0.2.tgz#59fce7bf366083a11974fb75825ec1508fd658f1"
-  integrity sha512-Yr9iBvCBEv4OMw6ZGxMmZoRUMaWd2SzeTRypGBgmmpaAYnhtdgKi0kKX4ezFxO5+grYym/jc3pQsmEzOfNkEGg==
+tiny-node-logger@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/tiny-node-logger/-/tiny-node-logger-1.1.1.tgz#241e6a18a4716e1d59fa678d158487ef17adfea4"
+  integrity sha512-xZImZeulRdqSxjvbG5zvhmidVi2G2FuUCfTVZvf6soyAVlauGPvJBzUkU5hStscOkKfCFqvjHoo+L1+16n/0ig==
   dependencies:
     chalk "^2.4.2"
 

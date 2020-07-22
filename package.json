@@ -55,7 +55,7 @@
     "rollup-plugin-sourcemaps": "^0.6.2",
     "rollup-plugin-terser": "^6.1.0",
     "router": "^1.3.5",
-    "tiny-node-logger": "^1.0.2",
+    "tiny-node-logger": "^1.1.1",
     "yargs": "^15.4.1"
   },
   "devDependencies": {
