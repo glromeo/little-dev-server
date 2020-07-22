@@ -17,6 +17,7 @@ describe("pipeline test", function () {
         const {size, mtime} = statSync(resolve("public/hello-world.txt"));
 
         const response = await fetch(`/public/hello-world.txt?ignored`);
+        const text = await response.text();
         expect(response.ok).toBe(true);
         expect(response.status).toBe(200);
         expect(response.statusText).toBe("OK");
@@ -31,7 +32,6 @@ describe("pipeline test", function () {
             expect.stringMatching(`/public/hello-world.txt ${size} ${mtime.toUTCString()}`),
             config.etag
         );
-        const text = await response.text();
         expect(text).toEqual("Hello World!");
     });
 

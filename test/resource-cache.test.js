@@ -17,10 +17,14 @@ describe("resource cache", function () {
 
         const tempFile = resolve("__temp_file__.scss");
 
-        await new Promise(resolve => {
+        const ready = new Promise(resolve => {
             watcher.on("ready", resolve);
             watcher.add(".nothing");
         });
+
+        log.info("waiting for watcher to be ready");
+
+        await ready;
 
         writeFileSync(tempFile, `
             .cache_functionality_test {
@@ -30,13 +34,15 @@ describe("resource cache", function () {
 
         expect(watcher.getWatched()["."]).toBe(undefined);
 
+        log.info("fetching for the first time");
+
         await fetch(`/__temp_file__.scss`).then(res => res.text()).then(text => {
             expect(text).toContain(".cache_functionality_test");
         });
 
         expect(watcher.getWatched()["."].length).toBe(1);
 
-        await new Promise(resolve => {
+        const changed = new Promise(resolve => {
             watcher.on("change", resolve);
             writeFileSync(tempFile, `
                 .updated_class {
@@ -45,15 +51,26 @@ describe("resource cache", function () {
             `, "utf-8");
         });
 
+        log.info("waiting for the change to be detected by the watcher");
+
+        await changed;
+
         expect((watcher.getWatched())["."].length).toBe(1);
+
+        log.info("fetching for the second time");
 
         await fetch(`/__temp_file__.scss`).then(res => res.text()).then(text => {
             expect(text).toContain(".updated_class");
         });
 
-        unlinkSync(tempFile);
+        const unlinked = new Promise(resolve => {
+            watcher.on("unlink", resolve);
+            unlinkSync(tempFile);
+        });
 
-        await new Promise(resolve => watcher.on("unlink", resolve));
+        log.info("waiting for the unlink");
+
+        await unlinked;
 
         expect((watcher.getWatched())["."].length).toBe(0);
     });

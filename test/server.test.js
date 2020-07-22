@@ -1,5 +1,7 @@
 describe("server", function () {
 
+    const log = require("tiny-node-logger");
+
     const http = require("http");
     const http2 = require("http2");
     const https = require("https");
@@ -235,7 +237,7 @@ describe("server", function () {
                 })
             ]);
 
-            client.close();
+            await new Promise(closed => client.close(closed));
         });
     });
 
@@ -253,6 +255,7 @@ describe("server", function () {
         let server, address, agent;
 
         beforeAll(async function () {
+            config.server.port = 9090;
             const instance = await startServer(config);
             server = instance.server;
             address = instance.address;
@@ -270,26 +273,38 @@ describe("server", function () {
 
             const client = http2.connect(`${address}`);
 
-            client.on("error", fail);
+            await new Promise(async exit => {
 
-            await new Promise(async done => {
-                const post = client.request({
-                    ":path": "/",
-                    ":method": "POST",
-                    "content-type": "application/json; charset=UTF-8"
+                client.on("error", function (err) {
+                    log.info("client error");
+                    expect(err.code).toMatch("ECONNRESET");
+                    exit();
                 });
-                post.on("response", (headers, flags) => {
-                    expect(headers[":status"]).toBe(200);
-                    expect(headers["content-type"]).toBe("application/json; charset=UTF-8");
-                    expect(flags).toBe(4);
-                    done(post);
-                    contentText(post).then(fail);
+
+                await new Promise(async next => {
+                    const req = client.request({
+                        ":path": "/",
+                        ":method": "POST",
+                        "content-type": "text/plain; charset=UTF-8"
+                    });
+                    req.on('error', function (err) {
+                        log.info("req/res error");
+                        expect(err.code).toMatch("ECONNRESET");
+                    })
+                    req.on("response", (headers, flags) => {
+                        expect(headers[":status"]).toBe(200);
+                        expect(headers["content-type"]).toBe("text/plain; charset=UTF-8");
+                        expect(flags).toBe(4);
+                        next();
+                        req.end("late message");
+                        log.info("msg sent");
+                    });
                 });
+
+                await server.shutdown();
             });
 
-            await server.shutdown();
-
-            client.close();
+            expect(client.closed).toBe(false);
         });
 
     });
