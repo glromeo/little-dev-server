@@ -202,8 +202,6 @@ describe("server", function () {
                 ca: fs.readFileSync(`cert/rootCA.pem`)
             });
 
-            client.on("error", fail);
-
             await Promise.all([
                 new Promise(async done => {
                     const get = client.request({

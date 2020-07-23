@@ -43,7 +43,10 @@ describe("resource cache", function () {
         expect(watcher.getWatched()["."].length).toBe(1);
 
         const changed = new Promise(resolve => {
-            watcher.on("change", resolve);
+            watcher.on("change", (event, file) => {
+                log.info(event, file);
+                resolve();
+            });
             writeFileSync(tempFile, `
                 .updated_class {
                     background-color: red;
