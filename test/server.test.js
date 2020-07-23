@@ -1,7 +1,5 @@
 describe("server", function () {
 
-    const log = require("tiny-node-logger");
-
     const http = require("http");
     const http2 = require("http2");
     const https = require("https");
@@ -12,7 +10,7 @@ describe("server", function () {
     const {contentText} = require("../lib/util/content-utils.js");
     const fetch = require("node-fetch");
 
-    const logLevel = "info";
+    const logLevel = "debug";
 
     jest.mock("../lib/request-handler.js", function () {
         return {
@@ -267,42 +265,42 @@ describe("server", function () {
             expect(config.onexit).toHaveBeenCalledWith(server);
         });
 
-        it("can start/stop a server with pending connections", async () => {
+        it("can start/stop a server with pending connections", async exit => {
 
             const client = http2.connect(`${address}`);
 
-            await new Promise(async exit => {
+            client.on("close", exit);
 
+            const closed = new Promise(closed => {
                 client.on("error", function (err) {
-                    log.info("client error");
                     expect(err.code).toMatch("ECONNRESET");
-                    exit();
+                    client.close(closed);
                 });
-
-                await new Promise(async next => {
-                    const req = client.request({
-                        ":path": "/",
-                        ":method": "POST",
-                        "content-type": "text/plain; charset=UTF-8"
-                    });
-                    req.on('error', function (err) {
-                        log.info("req/res error");
-                        expect(err.code).toMatch("ECONNRESET");
-                    })
-                    req.on("response", (headers, flags) => {
-                        expect(headers[":status"]).toBe(200);
-                        expect(headers["content-type"]).toBe("text/plain; charset=UTF-8");
-                        expect(flags).toBe(4);
-                        next();
-                        req.end("late message");
-                        log.info("msg sent");
-                    });
-                });
-
-                await server.shutdown();
             });
 
-            expect(client.closed).toBe(false);
+            await new Promise(next => {
+                const req = client.request({
+                    ":path": "/",
+                    ":method": "POST",
+                    "content-type": "text/plain; charset=UTF-8"
+                });
+                req.on('error', function (err) {
+                    expect(err.code).toMatch("ECONNRESET");
+                })
+                req.on("response", (headers, flags) => {
+                    expect(headers[":status"]).toBe(200);
+                    expect(headers["content-type"]).toBe("text/plain; charset=UTF-8");
+                    expect(flags).toBe(4);
+                    next();
+                    req.end("late message");
+                });
+            });
+
+            await server.shutdown();
+
+            await closed;
+
+            expect(client.closed).toBe(true);
         });
 
     });
