@@ -1,7 +1,7 @@
 {
   "name": "little-dev-server",
   "main": "./lib/cli.js",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "A node http2 server for fun...",
   "author": "Gianluca Romeo <glromeo@gmail.com> (https://github.com/glromeo/little-dev-server)",
   "license": "MIT",
@@ -55,7 +55,7 @@
     "rollup-plugin-sourcemaps": "^0.6.2",
     "rollup-plugin-terser": "^6.1.0",
     "router": "^1.3.5",
-    "tiny-node-logger": "^1.1.1",
+    "tiny-node-logger": "^1.3.0",
     "yargs": "^15.4.1"
   },
   "devDependencies": {
