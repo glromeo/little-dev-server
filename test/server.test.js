@@ -291,12 +291,10 @@ describe("server", function () {
                     expect(headers[":status"]).toBe(200);
                     expect(headers["content-type"]).toBe("text/plain; charset=UTF-8");
                     expect(flags).toBe(4);
-                    next();
+                    server.shutdown();
                     req.end("late message");
                 });
             });
-
-            await server.shutdown();
 
             await closed;
 

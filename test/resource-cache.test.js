@@ -31,6 +31,7 @@ describe("resource cache", function () {
                 background-color: white;
             }
         `, "utf-8");
+        log.info(tempFile, "written");
 
         expect(watcher.getWatched()["."]).toBe(undefined);
 
@@ -42,16 +43,18 @@ describe("resource cache", function () {
 
         expect(watcher.getWatched()["."].length).toBe(1);
 
-        const changed = new Promise(resolve => {
+        const changed = new Promise(async resolve => {
             watcher.on("change", (event, file) => {
                 log.info(event, file);
                 resolve();
             });
+            await new Promise(resolve => setTimeout(resolve, 150));
             writeFileSync(tempFile, `
                 .updated_class {
                     background-color: red;
                 }
             `, "utf-8");
+            log.info(tempFile, "written");
         });
 
         log.info("waiting for the change to be detected by the watcher");
@@ -69,6 +72,7 @@ describe("resource cache", function () {
         const unlinked = new Promise(resolve => {
             watcher.on("unlink", resolve);
             unlinkSync(tempFile);
+            log.info(tempFile, "deleted");
         });
 
         log.info("waiting for the unlink");
