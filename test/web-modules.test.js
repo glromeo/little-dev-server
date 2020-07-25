@@ -161,7 +161,7 @@ describe("web modules", function () {
             "main": "src/index.js",
             "name": "graphql-tag",
             "stats": {
-                "size": 12881
+                "size": 1842
             }
         });
         expect(fs.readFileSync(path.resolve(fixturedir, "web_modules/graphql-tag/src/index.js"), "UTF-8")).toMatch(

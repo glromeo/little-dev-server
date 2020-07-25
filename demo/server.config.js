@@ -7,7 +7,8 @@ module.exports = {
     nodeModules: [resolve(rootDir, 'node_modules'), resolve(rootDir, '..', 'node_modules')],
     webModules: resolve(rootDir, "web_modules"),
     mount: {
-        "/public": resolve(rootDir, "public")
+        "/public": resolve(rootDir, "public"),
+        "/test": resolve(rootDir, "../test")
     },
     babel: {
         plugins: [
