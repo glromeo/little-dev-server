@@ -14,7 +14,7 @@ describe("web modules", function () {
         resolveImport,
         resolveWebModule,
         rollupWebModule
-    } = useWebModules(configure({rootDir: fixturedir}));
+    } = useWebModules(configure({rootDir: fixturedir, web_modules: {standalone:["mocha"]}}));
 
     beforeEach(function () {
         modules.init();
@@ -267,5 +267,11 @@ describe("web modules", function () {
                 "directives/unsafe-html.js"
             ]
         });
+    });
+
+    it("rollup web module: mocha", async function () {
+
+        const webPkg = await rollupWebModule("mocha", "browser-entry.js");
+        console.log(webPkg);
     });
 });
